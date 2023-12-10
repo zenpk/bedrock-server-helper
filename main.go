@@ -22,7 +22,7 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	e.GET("/", _)
+	e.GET("/", )
 
 	e.Logger.Fatal(e.Start(":1323"))
 }
