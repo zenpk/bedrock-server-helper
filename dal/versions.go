@@ -24,7 +24,7 @@ func (v Versions) Create() error {
 
 func (v Versions) List() ([]Versions, error) {
 	versions := make([]Versions, 0)
-	rows, err := v.db.Query(`SELECT * FROM versions WHERE deleted = 0 ORDER BY id DESC`)
+	rows, err := v.db.Query(`SELECT * FROM versions WHERE deleted = 0 ORDER BY id DESC;`)
 	defer rows.Close()
 	for rows.Next() {
 		var version Versions
@@ -41,11 +41,11 @@ func (v Versions) Insert(name string) error {
 	if name == "" {
 		name = util.UnixYyyyMmDd()
 	}
-	_, err := v.db.Exec("INSERT INTO versions (name) VALUES (?) ", name)
+	_, err := v.db.Exec("INSERT INTO versions (name) VALUES (?);", name)
 	return err
 }
 
 func (v Versions) DeleteByName(name string) error {
-	_, err := v.db.Exec("UPDATE versions SET deleted = 1 WHERE name = ?", name)
+	_, err := v.db.Exec("UPDATE versions SET deleted = 1 WHERE name = ?;", name)
 	return err
 }
