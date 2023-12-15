@@ -10,12 +10,14 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/lestrrat-go/jwx/jwk"
 	"github.com/zenpk/bedrock-server-helper/dal"
+	"github.com/zenpk/bedrock-server-helper/runner"
 	"log"
 )
 
 const (
-	path   = "mc.db"
+	dbPath = "./mc.db"
 	jwkEnd = "https://example.com/public-key"
+	mcPath = "~/mc"
 )
 
 type jwtCustomClaims struct {
@@ -25,13 +27,24 @@ type jwtCustomClaims struct {
 
 func main() {
 	db := &dal.Db{}
-	if err := db.Connect(path); err != nil {
+	if err := db.Connect(dbPath); err != nil {
 		panic(err)
 	}
 	defer db.Db.Close()
+	runners := &runner.Runner{
+		Db:              db,
+		McPath:          mcPath,
+		BaseWorldFolder: "base_world",
+		ServersFolder:   "servers",
+		BackupsFolder:   "backups",
+	}
+	scheduler, err := runners.StartCron()
+	if err != nil {
+		panic(err)
+	}
+	defer scheduler.StopJobs()
 
 	e := echo.New()
-
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"*"},
@@ -58,11 +71,17 @@ func main() {
 		LogStatus:    true,
 	}))
 
-	handlers := Handlers{Db: db}
-	e.GET("/backups/list", handlers.backupsList)
-	e.GET("/versions/list", handlers.backupsList)
+	handlers := &Handlers{
+		Db:     db,
+		Runner: runners,
+	}
+	e.GET("/worlds/list", handlers.worldsList)
+	e.POST("/worlds/create", handlers.createWorld)
+	e.POST("/worlds/upload/:worldId", handlers.uploadWorld)
+	e.GET("/backups/list/:worldId", handlers.backupsList)
+	e.GET("/servers/list/:worldId", handlers.serversList)
 
-	e.Logger.Fatal(e.Start(":1323"))
+	e.Logger.Fatal(e.StartTLS(":1323", "cert.pem", "key.pem"))
 }
 
 func getKey(token *jwt.Token) (interface{}, error) {

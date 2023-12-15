@@ -1,0 +1,244 @@
+package runner
+
+import (
+	"errors"
+	"github.com/labstack/echo/v4"
+	"github.com/zenpk/bedrock-server-helper/dal"
+	"io"
+	"log"
+	"mime/multipart"
+	"os"
+	"os/exec"
+	"strconv"
+	"strings"
+)
+
+type Runner struct {
+	Db              *dal.Db
+	McPath          string
+	BaseWorldFolder string
+	ServersFolder   string
+	BackupsFolder   string
+}
+
+// CreateSaveData receives and unzips a world file for later usage
+func (r Runner) CreateSaveData(worldId int64, world *multipart.FileHeader, c echo.Context) error {
+	record, err := r.Db.Worlds.SelectById(worldId)
+	if err != nil {
+		return err
+	}
+	// TODO transaction
+	// world dir
+	var output []byte
+	basePath := r.McPath + "/" + record.Name
+	baseWorldPath := basePath + "/" + r.BaseWorldFolder
+	serversPath := basePath + "/" + r.ServersFolder
+	backupsPath := basePath + "/" + r.BackupsFolder
+	output, err = exec.Command("/bin/bash mkdirs.sh", baseWorldPath, serversPath, backupsPath).CombinedOutput()
+	if err != nil {
+		return err
+	}
+	if err := writeOutput(output, c); err != nil {
+		return err
+	}
+	// copy world zip file
+	src, err := world.Open()
+	if err != nil {
+		return err
+	}
+	zipFilePath := basePath + r.BaseWorldFolder + world.Filename
+	dst, err := os.Create(zipFilePath)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+	if _, err = io.Copy(dst, src); err != nil {
+		return err
+	}
+	output, err = exec.Command("/bin/bash unzip_rm.sh", zipFilePath, baseWorldPath).CombinedOutput()
+	if err != nil {
+		return err
+	}
+	if err := writeOutput(output, c); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r Runner) GetServer(version string, worldId int64, c echo.Context) error {
+	if err := versionNameCheck(version); err != nil {
+		return err
+	}
+	world, err := r.Db.Worlds.SelectById(worldId)
+	if err != nil {
+		return err
+	}
+	// TODO transaction
+	serverPath := r.McPath + "/" + world.Name + "/" + r.ServersFolder + "/"
+	var output []byte
+	output, err = exec.Command("/bin/bash get_server.sh", serverPath, version).CombinedOutput()
+	if err != nil {
+		return err
+	}
+	if err := writeOutput(output, c); err != nil {
+		return err
+	}
+	downloadFilePath := serverPath + version + ".zip"
+	output, err = exec.Command("/bin/bash unzip_rm.sh", downloadFilePath, serverPath).CombinedOutput()
+	if err != nil {
+		return err
+	}
+	if err := writeOutput(output, c); err != nil {
+		return err
+	}
+	if err := r.Db.Servers.Insert("bedrock-server-"+version, worldId); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r Runner) useServer(serverId, worldId int64, c echo.Context) error {
+	world, err := r.Db.Worlds.SelectById(worldId)
+	if err != nil {
+		return err
+	}
+	basePath := r.McPath + "/" + world.Name
+	var saveDataPath string
+	if world.UsingServer != 0 {
+		oldServer, err := r.Db.Servers.SelectById(world.UsingServer)
+		if err != nil {
+			return err
+		}
+		saveDataPath = basePath + "/" + r.ServersFolder + "/" + oldServer.Version + "/worlds/" + world.Name
+	} else {
+		saveDataPath = basePath + "/" + r.BaseWorldFolder + "/" + world.Name
+	}
+	newServer, err := r.Db.Servers.SelectById(serverId)
+	newServerPath := basePath + "/" + r.ServersFolder + "/" + newServer.Version
+	var output []byte
+	output, err = exec.Command("/bin/bash use_server.sh", saveDataPath, newServerPath, world.Properties, world.AllowList).CombinedOutput()
+	if err != nil {
+		return err
+	}
+	if err := writeOutput(output, c); err != nil {
+		return err
+	}
+	if err := r.Db.Worlds.SetUsingServer(worldId, serverId); err != nil {
+		return err
+	}
+	return nil
+}
+
+// backup current world
+func (r Runner) backup(name string, worldId int64, c echo.Context) error {
+	var err error
+	name, err = r.Db.Backups.ResolveName(name)
+	if err != nil {
+		return err
+	}
+	world, err := r.Db.Worlds.SelectById(worldId)
+	if err != nil {
+		return err
+	}
+	if world.UsingServer == 0 {
+		return errors.New("world is not using a server, there is no need to backup")
+	}
+	server, err := r.Db.Servers.SelectById(world.UsingServer)
+	if err != nil {
+		return err
+	}
+	basePath := r.McPath + "/" + world.Name
+	backupPath := basePath + "/" + r.BackupsFolder + "/" + name
+	saveDataPath := basePath + "/" + r.ServersFolder + "/" + server.Version + "/worlds/" + world.Name
+	var output []byte
+	output, err = exec.Command("/bin/bash backup.sh", backupPath, saveDataPath).CombinedOutput()
+	if err != nil {
+		return err
+	}
+	if err := writeOutput(output, c); err != nil {
+		return err
+	}
+	if err := r.Db.Backups.Insert(name, worldId); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r Runner) restore(backupId, worldId int64, ifBackup bool, c echo.Context) error {
+	if ifBackup {
+		if err := r.backup("", worldId, c); err != nil {
+			return err
+		}
+	}
+	backup, err := r.Db.Backups.SelectById(backupId)
+	if err != nil {
+		return err
+	}
+	world, err := r.Db.Worlds.SelectById(worldId)
+	if err != nil {
+		return err
+	}
+	server, err := r.Db.Servers.SelectById(world.UsingServer)
+	if err != nil {
+		return err
+	}
+	basePath := r.McPath + "/" + world.Name
+	backupPath := basePath + "/" + r.BackupsFolder + "/" + backup.Name + "/" + world.Name
+	saveDataPath := basePath + "/" + r.ServersFolder + "/" + server.Version + "/worlds/"
+	var output []byte
+	output, err = exec.Command("/bin/bash restore.sh", backupPath, saveDataPath).CombinedOutput()
+	if err != nil {
+		return err
+	}
+	if err := writeOutput(output, c); err != nil {
+		return err
+	}
+	return nil
+}
+
+// CleanOldBackups deletes backups older than days
+func (r Runner) CleanOldBackups(days int64, c echo.Context) error {
+	backups, err := r.Db.Backups.SelectDaysBefore(days)
+	if err != nil {
+		return err
+	}
+	for _, backup := range backups {
+		cmd := exec.Command("bash delete_backup.sh", r.BackupsFolder+"/"+backup.Name)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			return err
+		}
+		if err := writeOutput(output, c); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// versionNameCheck checks if the version name is "x.x.x.x" format
+func versionNameCheck(version string) error {
+	numStrs := strings.Split(version, ".")
+	err := errors.New("invalid version")
+	if len(numStrs) < 4 {
+		return err
+	}
+	for _, numStr := range numStrs {
+		num, err2 := strconv.Atoi(numStr)
+		if err2 != nil {
+			return err
+		}
+		if num < 0 {
+			return err
+		}
+	}
+	return nil
+}
+
+func writeOutput(output []byte, c echo.Context) error {
+	log.Println(string(output))
+	if _, err := io.Copy(c.Response(), strings.NewReader(string(output))); err != nil {
+		return err
+	}
+	c.Response().Flush()
+	return nil
+}

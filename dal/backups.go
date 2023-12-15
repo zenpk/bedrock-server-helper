@@ -2,6 +2,7 @@ package dal
 
 import (
 	"database/sql"
+	"errors"
 	"github.com/zenpk/bedrock-server-helper/util"
 )
 
@@ -10,6 +11,7 @@ type Backups struct {
 	Id        int64
 	Name      string
 	Timestamp int64
+	WorldId   int64
 	Deleted   bool
 }
 
@@ -19,14 +21,15 @@ func (b Backups) Create() error {
 	    id INTEGER PRIMARY KEY AUTOINCREMENT,
 	    name TEXT NOT NULL,
 		timestamp INTEGER NOT NULL,
+		world_id INTEGER NOT NULL,
 		deleted INTEGER NOT NULL DEFAULT 0
 	);`)
 	return err
 }
 
-func (b Backups) List() ([]Backups, error) {
+func (b Backups) ListByWorldId(worldId int64) ([]Backups, error) {
 	backups := make([]Backups, 0)
-	rows, err := b.db.Query(`SELECT * FROM backups WHERE deleted = 0 ORDER BY id DESC`)
+	rows, err := b.db.Query(`SELECT * FROM backups WHERE (deleted = 0 AND world_id = ?) ORDER BY id DESC`, worldId)
 	defer rows.Close()
 	for rows.Next() {
 		var backup Backups
@@ -40,27 +43,19 @@ func (b Backups) List() ([]Backups, error) {
 }
 
 // Insert default name YYYY-MM-DD
-func (b Backups) Insert(name string) error {
+func (b Backups) Insert(name string, worldId int64) error {
 	if name == "" {
-		name = util.UnixYyyyMmDd()
+		return errors.New("backup name mustn't be empty")
 	}
-	// dealing with name collision
-	for {
-		rows, err := b.db.Query("SELECT * FROM backups WHERE (name = ? AND deleted != 0);", name)
-		if err != nil {
-			return err
-		}
-		if !rows.Next() {
-			break
-		}
-		name += "1"
+	if worldId <= 0 {
+		return errors.New("world_id must be bigger than 0")
 	}
-	_, err := b.db.Exec("INSERT INTO backups (name, timestamp) VALUES (?, ?);", name, util.UnixSeconds())
+	_, err := b.db.Exec("INSERT INTO backups (name, timestamp, world_id) VALUES (?, ?, ?);", name, util.UnixSeconds(), worldId)
 	return err
 }
 
-func (b Backups) DeleteByName(name string) error {
-	_, err := b.db.Exec("UPDATE backups SET deleted = 1 WHERE name = ?;", name)
+func (b Backups) DeleteById(id int64) error {
+	_, err := b.db.Exec("UPDATE backups SET deleted = 1 WHERE id = ?;", id)
 	return err
 }
 
@@ -79,4 +74,35 @@ func (b Backups) SelectDaysBefore(days int64) ([]Backups, error) {
 		backups = append(backups, backup)
 	}
 	return backups, nil
+}
+
+func (b Backups) SelectById(id int64) (Backups, error) {
+	rows, err := b.db.Query("SELECT * FROM backups WHERE (id = ? AND deleted = 0);", id)
+	var backup Backups
+	for rows.Next() {
+		err = rows.Scan(&backup.Id, &backup.Name, &backup.Timestamp)
+		if err != nil {
+			return backup, err
+		}
+	}
+	return backup, nil
+}
+
+// ResolveName ensures that the backup name is legal and unique
+func (b Backups) ResolveName(name string) (string, error) {
+	if name == "" {
+		name = util.UnixYyyyMmDd()
+	}
+	// dealing with name collision
+	for {
+		rows, err := b.db.Query("SELECT * FROM backups WHERE (name = ? AND deleted != 0);", name)
+		if err != nil {
+			return "", err
+		}
+		if !rows.Next() {
+			break
+		}
+		name += "1"
+	}
+	return name, nil
 }

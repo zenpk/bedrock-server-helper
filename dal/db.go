@@ -6,9 +6,10 @@ import (
 )
 
 type Db struct {
-	Db       *sql.DB
-	Backups  *Backups
-	Versions *Versions
+	Db      *sql.DB
+	Worlds  *Worlds
+	Backups *Backups
+	Servers *Servers
 }
 
 func (d *Db) Connect(path string) error {
@@ -17,12 +18,16 @@ func (d *Db) Connect(path string) error {
 		return err
 	}
 	d.Db = db
+	d.Worlds = &Worlds{db: db}
 	d.Backups = &Backups{db: db}
-	d.Versions = &Versions{db: db}
+	d.Servers = &Servers{db: db}
+	if err := d.Worlds.Create(); err != nil {
+		return err
+	}
 	if err := d.Backups.Create(); err != nil {
 		return err
 	}
-	if err := d.Versions.Create(); err != nil {
+	if err := d.Servers.Create(); err != nil {
 		return err
 	}
 	return nil
