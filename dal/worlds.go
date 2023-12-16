@@ -35,7 +35,7 @@ func (w Worlds) List() ([]Worlds, error) {
 	defer rows.Close()
 	for rows.Next() {
 		var world Worlds
-		err = rows.Scan(&world.Id, &world.Name, &world.Properties, &world.AllowList)
+		err = rows.Scan(&world.Id, &world.Name, &world.Properties, &world.AllowList, &world.HasSaveData, &world.UsingServer, &world.Deleted)
 		if err != nil {
 			return worlds, err
 		}

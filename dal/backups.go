@@ -33,7 +33,7 @@ func (b Backups) ListByWorldId(worldId int64) ([]Backups, error) {
 	defer rows.Close()
 	for rows.Next() {
 		var backup Backups
-		err = rows.Scan(&backup.Id, &backup.Name, &backup.Timestamp)
+		err = rows.Scan(&backup.Id, &backup.Name, &backup.Timestamp, &backup.WorldId, &backup.Deleted)
 		if err != nil {
 			return backups, err
 		}
@@ -67,7 +67,7 @@ func (b Backups) SelectDaysBefore(days int64) ([]Backups, error) {
 	defer rows.Close()
 	for rows.Next() {
 		var backup Backups
-		err = rows.Scan(&backup.Id, &backup.Name, &backup.Timestamp)
+		err = rows.Scan(&backup.Id, &backup.Name, &backup.Timestamp, &backup.WorldId, &backup.Deleted)
 		if err != nil {
 			return backups, err
 		}
@@ -80,7 +80,7 @@ func (b Backups) SelectById(id int64) (Backups, error) {
 	rows, err := b.db.Query("SELECT * FROM backups WHERE (id = ? AND deleted = 0);", id)
 	var backup Backups
 	for rows.Next() {
-		err = rows.Scan(&backup.Id, &backup.Name, &backup.Timestamp)
+		err = rows.Scan(&backup.Id, &backup.Name, &backup.Timestamp, &backup.WorldId, &backup.Deleted)
 		if err != nil {
 			return backup, err
 		}

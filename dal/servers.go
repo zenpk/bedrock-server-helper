@@ -30,7 +30,7 @@ func (s Servers) ListByWorldId(worldId int64) ([]Servers, error) {
 	defer rows.Close()
 	for rows.Next() {
 		var server Servers
-		err = rows.Scan(&server.Id, &server.Version, &server.WorldId)
+		err = rows.Scan(&server.Id, &server.Version, &server.WorldId, &server.Deleted)
 		if err != nil {
 			return servers, err
 		}
@@ -54,7 +54,7 @@ func (s Servers) SelectById(id int64) (Servers, error) {
 	rows, err := s.db.Query("SELECT * FROM servers WHERE id = ?;", id)
 	var server Servers
 	for rows.Next() {
-		err = rows.Scan(&server.Id, &server.Version, &server.WorldId)
+		err = rows.Scan(&server.Id, &server.Version, &server.WorldId, &server.Deleted)
 		if err != nil {
 			return server, err
 		}
