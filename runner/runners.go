@@ -127,7 +127,8 @@ func (r Runner) UseServer(serverId, worldId int64, c echo.Context) error {
 	newServer, err := r.Db.Servers.SelectById(serverId)
 	newServerPath := basePath + "/" + r.ServersFolder + "/" + newServer.Version
 	var output []byte
-	output, err = exec.Command("./runner/use_server.sh", saveDataPath, newServerPath, world.Properties, world.AllowList).CombinedOutput()
+	// issue: cp -r not behaving as expected, add $5 to fix
+	output, err = exec.Command("./runner/use_server.sh", saveDataPath, newServerPath, world.Properties, world.AllowList, world.Name).CombinedOutput()
 	if err != nil {
 		return err
 	}
