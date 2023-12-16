@@ -71,6 +71,7 @@ func main() {
 			user := c.Get("user").(*jwt.Token) // User is injected by the JWT middleware
 			claims := user.Claims.(*jwtCustomClaims)
 			log.Printf("username: %v\n", claims.Username)
+			log.Println(values.Error)
 			return nil
 		},
 		LogRemoteIP:  true,
