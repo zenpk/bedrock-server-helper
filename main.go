@@ -80,6 +80,7 @@ func main() {
 		LogURIPath:   true,
 		LogRoutePath: true,
 		LogStatus:    true,
+		LogError:     true,
 	}))
 
 	handlers := &Handlers{
