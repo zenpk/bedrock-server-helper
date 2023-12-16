@@ -23,6 +23,7 @@ func (h Handlers) worldsList(c echo.Context) error {
 }
 
 func (h Handlers) createWorld(c echo.Context) error {
+	// TODO name check
 	req := struct {
 		Name       string `json:"name"`
 		Properties string `json:"properties"`

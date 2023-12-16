@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
@@ -15,9 +16,15 @@ import (
 )
 
 const (
-	dbPath = "./mc.db"
-	jwkEnd = "https://example.com/public-key"
-	mcPath = "~/mc"
+	dbPath          = "./mc.db"
+	mcPath          = "~/mc"
+	baseWorldFolder = "base_world"
+	serversFolder   = "servers"
+	backupsFolder   = "backups"
+)
+
+var (
+	jwkEnd = flag.String("jwk", "https://example.com", "JWK public key endpoint")
 )
 
 type jwtCustomClaims struct {
@@ -26,6 +33,7 @@ type jwtCustomClaims struct {
 }
 
 func main() {
+	flag.Parse()
 	db := &dal.Db{}
 	if err := db.Connect(dbPath); err != nil {
 		panic(err)
@@ -34,9 +42,9 @@ func main() {
 	runners := &runner.Runner{
 		Db:              db,
 		McPath:          mcPath,
-		BaseWorldFolder: "base_world",
-		ServersFolder:   "servers",
-		BackupsFolder:   "backups",
+		BaseWorldFolder: baseWorldFolder,
+		ServersFolder:   serversFolder,
+		BackupsFolder:   backupsFolder,
 	}
 	scheduler, err := runners.StartCron()
 	if err != nil {
@@ -87,11 +95,12 @@ func main() {
 	//e.POST("/worlds/start", handlers.start)
 	//e.POST("/worlds/stop", handlers.stop)
 
-	e.Logger.Fatal(e.StartTLS(":1323", "cert.pem", "key.pem"))
+	//e.Logger.Fatal(e.StartTLS(":1323", "cert.pem", "key.pem"))
+	e.Logger.Fatal(e.Start(":1323"))
 }
 
 func getKey(token *jwt.Token) (interface{}, error) {
-	keySet, err := jwk.Fetch(context.Background(), jwkEnd)
+	keySet, err := jwk.Fetch(context.Background(), *jwkEnd)
 	if err != nil {
 		return nil, err
 	}

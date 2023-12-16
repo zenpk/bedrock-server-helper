@@ -1,0 +1,22 @@
+###
+GET {{url}}/worlds/list
+Authorization: Bearer
+
+###
+POST {{url}}/worlds/create
+Authorization: Bearer
+Content-Type: application/json
+
+{
+  "name": "test-world",
+  "properties": "{'a':1, 'b': 2}",
+  "allowList": "['a', 'b']"
+}
+
+###
+POST {{url}}/worlds/upload/1
+Content-Type: multipart/form-data
+
+{
+  "world": "abd"
+}
