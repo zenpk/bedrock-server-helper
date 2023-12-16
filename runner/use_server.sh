@@ -5,6 +5,7 @@
 # $3 properties
 # $4 allow list
 
+set -e
 echo "moving current save data to the new server"
 cp -r "$1" "$2/worlds/"
 echo "writing properties"

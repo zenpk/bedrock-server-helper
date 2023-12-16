@@ -3,6 +3,7 @@
 # $1 backup path
 # $2 save data path
 
+set -e
 echo "making backup folder"
 mkdir -p "$1"
 echo "backing up"
