@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"mime/multipart"
+	"net/http"
 	"os"
 	"os/exec"
 	"strconv"
@@ -243,9 +244,13 @@ func versionNameCheck(version string) error {
 // writeOutput as server-sent events
 func writeOutput(output []byte, c echo.Context) error {
 	log.Println(string(output))
+	c.Response().Header().Set(echo.HeaderContentType, "text/event-stream")
+	c.Response().Header().Set(echo.HeaderCacheControl, "no-cache")
+	c.Response().WriteHeader(http.StatusOK)
 	if _, err := io.Copy(c.Response(), strings.NewReader(string(output))); err != nil {
 		return err
 	}
 	c.Response().Flush()
-	return nil
+	_, err := c.Response().Write([]byte("\n\n"))
+	return err
 }

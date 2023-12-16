@@ -48,10 +48,7 @@ func (h Handlers) uploadWorld(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := h.Runner.CreateSaveData(worldId, file, c); err != nil {
-		return err
-	}
-	return c.String(http.StatusOK, "ok")
+	return h.Runner.CreateSaveData(worldId, file, c)
 }
 
 func (h Handlers) backupsList(c echo.Context) error {
@@ -88,10 +85,7 @@ func (h Handlers) getServer(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return err
 	}
-	if err := h.Runner.GetServer(req.Version, req.WorldId, c); err != nil {
-		return err
-	}
-	return c.String(http.StatusOK, "ok")
+	return h.Runner.GetServer(req.Version, req.WorldId, c)
 }
 
 func (h Handlers) useServer(c echo.Context) error {
@@ -102,10 +96,7 @@ func (h Handlers) useServer(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return err
 	}
-	if err := h.Runner.UseServer(req.ServerId, req.WorldId, c); err != nil {
-		return err
-	}
-	return c.String(http.StatusOK, "ok")
+	return h.Runner.UseServer(req.ServerId, req.WorldId, c)
 }
 
 func (h Handlers) backup(c echo.Context) error {
@@ -116,10 +107,7 @@ func (h Handlers) backup(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return err
 	}
-	if err := h.Runner.Backup(req.Name, req.WorldId, c); err != nil {
-		return err
-	}
-	return c.String(http.StatusOK, "ok")
+	return h.Runner.Backup(req.Name, req.WorldId, c)
 }
 
 func (h Handlers) restore(c echo.Context) error {
@@ -131,8 +119,5 @@ func (h Handlers) restore(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return err
 	}
-	if err := h.Runner.Restore(req.BackupId, req.WorldId, req.IfBackup, c); err != nil {
-		return err
-	}
-	return c.String(http.StatusOK, "ok")
+	return h.Runner.Restore(req.BackupId, req.WorldId, req.IfBackup, c)
 }
