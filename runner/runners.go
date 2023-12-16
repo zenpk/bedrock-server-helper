@@ -80,15 +80,15 @@ func (r Runner) GetServer(version string, worldId int64, c echo.Context) error {
 	}
 	// TODO transaction
 	serverPath := r.McPath + "/" + world.Name + "/" + r.ServersFolder + "/"
+	downloadFilePath := serverPath + version + ".zip"
 	var output []byte
-	output, err = exec.Command("./runner/get_server.sh", serverPath, version).CombinedOutput()
+	output, err = exec.Command("./runner/get_server.sh", downloadFilePath, version).CombinedOutput()
 	if err != nil {
 		return err
 	}
 	if err := writeOutput(output, c); err != nil {
 		return err
 	}
-	downloadFilePath := serverPath + version + ".zip"
 	output, err = exec.Command("./runner/unzip_rm.sh", downloadFilePath, serverPath).CombinedOutput()
 	if err != nil {
 		return err

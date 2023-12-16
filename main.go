@@ -67,21 +67,15 @@ func main() {
 	}
 	e.Use(echojwt.WithConfig(jwtConfig))
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
-		LogValuesFunc: func(c echo.Context, values middleware.RequestLoggerValues) error {
+		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
 			user := c.Get("user").(*jwt.Token) // User is injected by the JWT middleware
 			claims := user.Claims.(*jwtCustomClaims)
-			log.Printf("username: %v\n", claims.Username)
-			log.Println(values.Error)
+			log.Printf("| %v | %-7s | %v | %v | %v\n", v.Status, v.Method, v.URIPath, claims.Username, v.RemoteIP)
+			if err != nil {
+				log.Println(v.Error)
+			}
 			return nil
 		},
-		LogRemoteIP:  true,
-		LogHost:      true,
-		LogMethod:    true,
-		LogURI:       true,
-		LogURIPath:   true,
-		LogRoutePath: true,
-		LogStatus:    true,
-		LogError:     true,
 	}))
 
 	handlers := &Handlers{

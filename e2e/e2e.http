@@ -24,3 +24,21 @@ Content-Disposition: form-data; name="world"; filename="example.zip"
 < ./example.zip
 
 ###
+POST {{url}}/servers/get
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "worldId": 1,
+  "version": "1.20.51.01"
+}
+
+###
+POST {{url}}/servers/use
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "worldId": 1,
+  "serverId": 1
+}
