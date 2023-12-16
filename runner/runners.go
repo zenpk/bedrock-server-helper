@@ -56,7 +56,8 @@ func (r Runner) CreateSaveData(worldId int64, world *multipart.FileHeader, c ech
 	if _, err = io.Copy(dst, src); err != nil {
 		return err
 	}
-	output, err = exec.Command("./runner/unzip_rm.sh", zipFilePath, baseWorldPath).CombinedOutput()
+	unzipDestPath := baseWorldPath + "/" + record.Name + "/"
+	output, err = exec.Command("./runner/unzip_rm.sh", zipFilePath, unzipDestPath).CombinedOutput()
 	if err != nil {
 		return err
 	}
@@ -66,7 +67,7 @@ func (r Runner) CreateSaveData(worldId int64, world *multipart.FileHeader, c ech
 	if err := r.Db.Worlds.SetHasSaveData(worldId, true); err != nil {
 		return err
 	}
-	return nil
+	return endOutput(c)
 }
 
 // GetServer downloads a version of server
@@ -89,7 +90,8 @@ func (r Runner) GetServer(version string, worldId int64, c echo.Context) error {
 	if err := writeOutput(output, c); err != nil {
 		return err
 	}
-	output, err = exec.Command("./runner/unzip_rm.sh", downloadFilePath, serverPath).CombinedOutput()
+	unzipDestPath := serverPath + version + "/"
+	output, err = exec.Command("./runner/unzip_rm.sh", downloadFilePath, unzipDestPath).CombinedOutput()
 	if err != nil {
 		return err
 	}
@@ -99,7 +101,7 @@ func (r Runner) GetServer(version string, worldId int64, c echo.Context) error {
 	if err := r.Db.Servers.Insert("bedrock-server-"+version, worldId); err != nil {
 		return err
 	}
-	return nil
+	return endOutput(c)
 }
 
 // UseServer uses a version of server for a world
@@ -132,7 +134,7 @@ func (r Runner) UseServer(serverId, worldId int64, c echo.Context) error {
 	if err := r.Db.Worlds.SetUsingServer(worldId, serverId); err != nil {
 		return err
 	}
-	return nil
+	return endOutput(c)
 }
 
 // Backup current world
@@ -167,7 +169,7 @@ func (r Runner) Backup(name string, worldId int64, c echo.Context) error {
 	if err := r.Db.Backups.Insert(name, worldId); err != nil {
 		return err
 	}
-	return nil
+	return endOutput(c)
 }
 
 // Restore a backup
@@ -200,7 +202,7 @@ func (r Runner) Restore(backupId, worldId int64, ifBackup bool, c echo.Context) 
 	if err := writeOutput(output, c); err != nil {
 		return err
 	}
-	return nil
+	return endOutput(c)
 }
 
 // CleanOldBackups deletes backups older than days
@@ -219,7 +221,7 @@ func (r Runner) CleanOldBackups(days int64, c echo.Context) error {
 			return err
 		}
 	}
-	return nil
+	return endOutput(c)
 }
 
 // versionNameCheck checks if the version name is "x.x.x.x" format
@@ -246,11 +248,16 @@ func writeOutput(output []byte, c echo.Context) error {
 	log.Println(string(output))
 	c.Response().Header().Set(echo.HeaderContentType, "text/event-stream")
 	c.Response().Header().Set(echo.HeaderCacheControl, "no-cache")
-	c.Response().WriteHeader(http.StatusOK)
 	if _, err := io.Copy(c.Response(), strings.NewReader(string(output))); err != nil {
 		return err
 	}
 	c.Response().Flush()
+	return nil
+}
+
+// endOutput ends the server-sent events
+func endOutput(c echo.Context) error {
+	c.Response().WriteHeader(http.StatusOK)
 	_, err := c.Response().Write([]byte("\n\n"))
 	return err
 }

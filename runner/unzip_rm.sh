@@ -3,5 +3,5 @@
 # $1 filename
 # $2 destination
 # unzips a file and removes the zip
-unzip "$1" -d "$2"
+unzip "$1" -d "$2" -q
 rm -f "$1"
