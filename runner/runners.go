@@ -34,7 +34,7 @@ func (r Runner) CreateSaveData(worldId int64, world *multipart.FileHeader, c ech
 	baseWorldPath := basePath + "/" + r.BaseWorldFolder
 	serversPath := basePath + "/" + r.ServersFolder
 	backupsPath := basePath + "/" + r.BackupsFolder
-	output, err = exec.Command("/bin/bash ./runner/mkdirs.sh", baseWorldPath, serversPath, backupsPath).CombinedOutput()
+	output, err = exec.Command("./runner/mkdirs.sh", baseWorldPath, serversPath, backupsPath).CombinedOutput()
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func (r Runner) CreateSaveData(worldId int64, world *multipart.FileHeader, c ech
 	if _, err = io.Copy(dst, src); err != nil {
 		return err
 	}
-	output, err = exec.Command("/bin/bash ./runner/unzip_rm.sh", zipFilePath, baseWorldPath).CombinedOutput()
+	output, err = exec.Command("./runner/unzip_rm.sh", zipFilePath, baseWorldPath).CombinedOutput()
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (r Runner) GetServer(version string, worldId int64, c echo.Context) error {
 	// TODO transaction
 	serverPath := r.McPath + "/" + world.Name + "/" + r.ServersFolder + "/"
 	var output []byte
-	output, err = exec.Command("/bin/bash ./runner/get_server.sh", serverPath, version).CombinedOutput()
+	output, err = exec.Command("./runner/get_server.sh", serverPath, version).CombinedOutput()
 	if err != nil {
 		return err
 	}
@@ -88,7 +88,7 @@ func (r Runner) GetServer(version string, worldId int64, c echo.Context) error {
 		return err
 	}
 	downloadFilePath := serverPath + version + ".zip"
-	output, err = exec.Command("/bin/bash ./runner/unzip_rm.sh", downloadFilePath, serverPath).CombinedOutput()
+	output, err = exec.Command("./runner/unzip_rm.sh", downloadFilePath, serverPath).CombinedOutput()
 	if err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func (r Runner) UseServer(serverId, worldId int64, c echo.Context) error {
 	newServer, err := r.Db.Servers.SelectById(serverId)
 	newServerPath := basePath + "/" + r.ServersFolder + "/" + newServer.Version
 	var output []byte
-	output, err = exec.Command("/bin/bash ./runner/use_server.sh", saveDataPath, newServerPath, world.Properties, world.AllowList).CombinedOutput()
+	output, err = exec.Command("./runner/use_server.sh", saveDataPath, newServerPath, world.Properties, world.AllowList).CombinedOutput()
 	if err != nil {
 		return err
 	}
@@ -156,7 +156,7 @@ func (r Runner) Backup(name string, worldId int64, c echo.Context) error {
 	backupPath := basePath + "/" + r.BackupsFolder + "/" + name
 	saveDataPath := basePath + "/" + r.ServersFolder + "/" + server.Version + "/worlds/" + world.Name
 	var output []byte
-	output, err = exec.Command("/bin/bash ./runner/backup.sh", backupPath, saveDataPath).CombinedOutput()
+	output, err = exec.Command("./runner/backup.sh", backupPath, saveDataPath).CombinedOutput()
 	if err != nil {
 		return err
 	}
@@ -192,7 +192,7 @@ func (r Runner) Restore(backupId, worldId int64, ifBackup bool, c echo.Context) 
 	backupPath := basePath + "/" + r.BackupsFolder + "/" + backup.Name + "/" + world.Name
 	saveDataPath := basePath + "/" + r.ServersFolder + "/" + server.Version + "/worlds/"
 	var output []byte
-	output, err = exec.Command("/bin/bash ./runner/restore.sh", backupPath, saveDataPath).CombinedOutput()
+	output, err = exec.Command("./runner/restore.sh", backupPath, saveDataPath).CombinedOutput()
 	if err != nil {
 		return err
 	}
@@ -209,7 +209,7 @@ func (r Runner) CleanOldBackups(days int64, c echo.Context) error {
 		return err
 	}
 	for _, backup := range backups {
-		cmd := exec.Command("bash ./runner/delete_backup.sh", r.BackupsFolder+"/"+backup.Name)
+		cmd := exec.Command("./runner/delete_backup.sh", r.BackupsFolder+"/"+backup.Name)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			return err
