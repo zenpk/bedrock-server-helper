@@ -17,13 +17,13 @@ import (
 
 const (
 	dbPath          = "./mc.db"
-	mcPath          = "~/mc"
 	baseWorldFolder = "base_world"
 	serversFolder   = "servers"
 	backupsFolder   = "backups"
 )
 
 var (
+	mcPath = flag.String("mc", "/home/user/mc", "Your Minecraft worlds/backups/servers location")
 	jwkEnd = flag.String("jwk", "https://example.com", "JWK public key endpoint")
 )
 
@@ -41,7 +41,7 @@ func main() {
 	defer db.Db.Close()
 	runners := &runner.Runner{
 		Db:              db,
-		McPath:          mcPath,
+		McPath:          *mcPath,
 		BaseWorldFolder: baseWorldFolder,
 		ServersFolder:   serversFolder,
 		BackupsFolder:   backupsFolder,
