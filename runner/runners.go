@@ -113,6 +113,9 @@ func (r Runner) UseServer(serverId, worldId int64, c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	if world.UsingServer == serverId {
+		return errors.New("the world is already using the server")
+	}
 	basePath := r.McPath + "/" + world.Name
 	var saveDataPath string
 	if world.UsingServer != 0 {

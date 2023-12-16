@@ -8,6 +8,7 @@
 
 set -e
 echo "moving current save data to the new server"
+rm -rf "$2/worlds/$5"
 cp -r "$1" "$2/worlds/$5"
 echo "writing properties"
 echo "$3" > "$2/server.properties"
