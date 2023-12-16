@@ -16,8 +16,11 @@ Content-Type: application/json
 ###
 POST {{url}}/worlds/upload/1
 Authorization: Bearer {{token}}
-Content-Type: multipart/form-data
+Content-Type: multipart/form-data; boundary=boundary
 
-{
-  "world": "abd"
-}
+--boundary
+Content-Disposition: form-data; name="world"; filename="example.zip"
+
+< ./example.zip
+
+###

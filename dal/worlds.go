@@ -58,7 +58,7 @@ func (w Worlds) SelectById(id int64) (Worlds, error) {
 	rows, err := w.db.Query("SELECT * FROM worlds WHERE id = ?;", id)
 	var world Worlds
 	for rows.Next() {
-		if err := rows.Scan(&world.Id, &world.Name, &world.Properties, &world.AllowList); err != nil {
+		if err := rows.Scan(&world.Id, &world.Name, &world.Properties, &world.AllowList, &world.HasSaveData, &world.UsingServer, &world.Deleted); err != nil {
 			return Worlds{}, err
 		}
 	}
