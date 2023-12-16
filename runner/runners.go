@@ -101,7 +101,7 @@ func (r Runner) GetServer(version string, worldId int64, c echo.Context) error {
 	if err := writeOutput(output, c); err != nil {
 		return err
 	}
-	if err := r.Db.Servers.Insert("bedrock-server-"+version, worldId); err != nil {
+	if err := r.Db.Servers.Insert(version, worldId); err != nil {
 		return err
 	}
 	return endOutput(c)
@@ -120,9 +120,9 @@ func (r Runner) UseServer(serverId, worldId int64, c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		saveDataPath = basePath + "/" + r.ServersFolder + "/" + oldServer.Version + "/worlds/" + world.Name
+		saveDataPath = basePath + "/" + r.ServersFolder + "/" + oldServer.Version + "/worlds/"
 	} else {
-		saveDataPath = basePath + "/" + r.BaseWorldFolder + "/" + world.Name
+		saveDataPath = basePath + "/" + r.BaseWorldFolder + "/"
 	}
 	newServer, err := r.Db.Servers.SelectById(serverId)
 	newServerPath := basePath + "/" + r.ServersFolder + "/" + newServer.Version

@@ -9,7 +9,7 @@ Content-Type: application/json
 
 {
   "name": "test-world",
-  "properties": "{'a':1, 'b': 2}",
+  "properties": "{'a': 1, 'b': 2}",
   "allowList": "['a', 'b']"
 }
 
