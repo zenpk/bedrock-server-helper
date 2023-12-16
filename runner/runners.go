@@ -120,9 +120,9 @@ func (r Runner) UseServer(serverId, worldId int64, c echo.Context) error {
 		if err != nil {
 			return err
 		}
-		saveDataPath = basePath + "/" + r.ServersFolder + "/" + oldServer.Version + "/worlds/"
+		saveDataPath = basePath + "/" + r.ServersFolder + "/" + oldServer.Version + "/worlds/" + world.Name
 	} else {
-		saveDataPath = basePath + "/" + r.BaseWorldFolder + "/"
+		saveDataPath = basePath + "/" + r.BaseWorldFolder + "/" + world.Name
 	}
 	newServer, err := r.Db.Servers.SelectById(serverId)
 	newServerPath := basePath + "/" + r.ServersFolder + "/" + newServer.Version
