@@ -67,6 +67,11 @@ func main() {
 	}
 	e.Use(echojwt.WithConfig(jwtConfig))
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		LogError:    true,
+		LogStatus:   true,
+		LogMethod:   true,
+		LogURIPath:  true,
+		LogRemoteIP: true,
 		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
 			user := c.Get("user").(*jwt.Token) // User is injected by the JWT middleware
 			claims := user.Claims.(*jwtCustomClaims)

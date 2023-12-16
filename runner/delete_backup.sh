@@ -6,3 +6,4 @@ if [ -d "$1" ]; then
 else
     echo "backup does not exist: $1"
 fi
+echo "done"

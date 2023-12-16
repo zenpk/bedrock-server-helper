@@ -42,3 +42,11 @@ Content-Type: application/json
   "worldId": 1,
   "serverId": 1
 }
+
+###
+GET {{url}}/servers/list/1
+Authorization: Bearer {{token}}
+
+###
+GET {{url}}/backups/list/1
+Authorization: Bearer {{token}}
