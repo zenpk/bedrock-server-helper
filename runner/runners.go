@@ -23,15 +23,18 @@ type Runner struct {
 }
 
 // CreateSaveData receives and unzips a world file for later usage
-func (r Runner) CreateSaveData(worldId int64, world *multipart.FileHeader, c echo.Context) error {
-	record, err := r.Db.Worlds.SelectById(worldId)
+func (r Runner) CreateSaveData(worldId int64, worldFile *multipart.FileHeader, c echo.Context) error {
+	world, err := r.Db.Worlds.SelectById(worldId)
 	if err != nil {
 		return err
+	}
+	if world.HasSaveData {
+		return errors.New("the world already has a save data")
 	}
 	// TODO transaction
 	// world dir
 	var output []byte
-	basePath := r.McPath + "/" + record.Name
+	basePath := r.McPath + "/" + world.Name
 	baseWorldPath := basePath + "/" + r.BaseWorldFolder
 	serversPath := basePath + "/" + r.ServersFolder
 	backupsPath := basePath + "/" + r.BackupsFolder
@@ -43,11 +46,11 @@ func (r Runner) CreateSaveData(worldId int64, world *multipart.FileHeader, c ech
 		return err
 	}
 	// copy world zip file
-	src, err := world.Open()
+	src, err := worldFile.Open()
 	if err != nil {
 		return err
 	}
-	zipFilePath := basePath + r.BaseWorldFolder + world.Filename
+	zipFilePath := basePath + r.BaseWorldFolder + worldFile.Filename
 	dst, err := os.Create(zipFilePath)
 	if err != nil {
 		return err
@@ -56,7 +59,7 @@ func (r Runner) CreateSaveData(worldId int64, world *multipart.FileHeader, c ech
 	if _, err = io.Copy(dst, src); err != nil {
 		return err
 	}
-	unzipDestPath := baseWorldPath + "/" + record.Name + "/"
+	unzipDestPath := baseWorldPath + "/" + world.Name + "/"
 	output, err = exec.Command("./runner/unzip_rm.sh", zipFilePath, unzipDestPath).CombinedOutput()
 	if err != nil {
 		return err

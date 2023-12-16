@@ -46,7 +46,7 @@ func (s Servers) Insert(version string, worldId int64) error {
 	if worldId <= 0 {
 		return errors.New("world_id must be bigger than 0")
 	}
-	_, err := s.db.Exec("INSERT INTO versions (version, world_id) VALUES (?, ?);", version, worldId)
+	_, err := s.db.Exec("INSERT INTO servers (version, world_id) VALUES (?, ?);", version, worldId)
 	return err
 }
 
@@ -82,6 +82,6 @@ func (s Servers) DeleteById(id int64) error {
 	if inUse {
 		return errors.New("server is in use")
 	}
-	_, err = s.db.Exec("UPDATE versions SET deleted = 1 WHERE id = ?;", id)
+	_, err = s.db.Exec("UPDATE servers SET deleted = 1 WHERE id = ?;", id)
 	return err
 }
