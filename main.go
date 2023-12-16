@@ -80,6 +80,12 @@ func main() {
 	e.POST("/worlds/upload/:worldId", handlers.uploadWorld)
 	e.GET("/backups/list/:worldId", handlers.backupsList)
 	e.GET("/servers/list/:worldId", handlers.serversList)
+	e.POST("/servers/get", handlers.getServer)
+	e.POST("/servers/use", handlers.useServer)
+	e.POST("/backups/backup", handlers.backup)
+	e.POST("/backups/restore", handlers.restore)
+	//e.POST("/worlds/start", handlers.start)
+	//e.POST("/worlds/stop", handlers.stop)
 
 	e.Logger.Fatal(e.StartTLS(":1323", "cert.pem", "key.pem"))
 }

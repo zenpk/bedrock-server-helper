@@ -47,10 +47,7 @@ func (h Handlers) uploadWorld(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := h.Runner.CreateSaveData(worldId, file); err != nil {
-		return err
-	}
-	if err := h.Db.Worlds.SetHasSaveData(worldId, true); err != nil {
+	if err := h.Runner.CreateSaveData(worldId, file, c); err != nil {
 		return err
 	}
 	return c.String(http.StatusOK, "ok")
@@ -82,9 +79,59 @@ func (h Handlers) serversList(c echo.Context) error {
 	return c.JSON(http.StatusOK, versions)
 }
 
-//func (h Handlers) enableServer(c echo.Context) error {
-//	req := struct {
-//		WorldId  int64 `json:"worldId"`
-//		ServerId int64 `json:"serverId"`
-//	}{}
-//}
+func (h Handlers) getServer(c echo.Context) error {
+	req := struct {
+		WorldId int64  `json:"worldId"`
+		Version string `json:"version"`
+	}{}
+	if err := c.Bind(&req); err != nil {
+		return err
+	}
+	if err := h.Runner.GetServer(req.Version, req.WorldId, c); err != nil {
+		return err
+	}
+	return c.String(http.StatusOK, "ok")
+}
+
+func (h Handlers) useServer(c echo.Context) error {
+	req := struct {
+		ServerId int64 `json:"serverId"`
+		WorldId  int64 `json:"worldId"`
+	}{}
+	if err := c.Bind(&req); err != nil {
+		return err
+	}
+	if err := h.Runner.UseServer(req.ServerId, req.WorldId, c); err != nil {
+		return err
+	}
+	return c.String(http.StatusOK, "ok")
+}
+
+func (h Handlers) backup(c echo.Context) error {
+	req := struct {
+		Name    string `json:"name"`
+		WorldId int64  `json:"worldId"`
+	}{}
+	if err := c.Bind(&req); err != nil {
+		return err
+	}
+	if err := h.Runner.Backup(req.Name, req.WorldId, c); err != nil {
+		return err
+	}
+	return c.String(http.StatusOK, "ok")
+}
+
+func (h Handlers) restore(c echo.Context) error {
+	req := struct {
+		BackupId int64 `json:"backupId"`
+		WorldId  int64 `json:"worldId"`
+		IfBackup bool  `json:"ifBackup"`
+	}{}
+	if err := c.Bind(&req); err != nil {
+		return err
+	}
+	if err := h.Runner.Restore(req.BackupId, req.WorldId, req.IfBackup, c); err != nil {
+		return err
+	}
+	return c.String(http.StatusOK, "ok")
+}

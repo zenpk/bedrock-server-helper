@@ -62,9 +62,13 @@ func (r Runner) CreateSaveData(worldId int64, world *multipart.FileHeader, c ech
 	if err := writeOutput(output, c); err != nil {
 		return err
 	}
+	if err := r.Db.Worlds.SetHasSaveData(worldId, true); err != nil {
+		return err
+	}
 	return nil
 }
 
+// GetServer downloads a version of server
 func (r Runner) GetServer(version string, worldId int64, c echo.Context) error {
 	if err := versionNameCheck(version); err != nil {
 		return err
@@ -97,7 +101,8 @@ func (r Runner) GetServer(version string, worldId int64, c echo.Context) error {
 	return nil
 }
 
-func (r Runner) useServer(serverId, worldId int64, c echo.Context) error {
+// UseServer uses a version of server for a world
+func (r Runner) UseServer(serverId, worldId int64, c echo.Context) error {
 	world, err := r.Db.Worlds.SelectById(worldId)
 	if err != nil {
 		return err
@@ -129,8 +134,8 @@ func (r Runner) useServer(serverId, worldId int64, c echo.Context) error {
 	return nil
 }
 
-// backup current world
-func (r Runner) backup(name string, worldId int64, c echo.Context) error {
+// Backup current world
+func (r Runner) Backup(name string, worldId int64, c echo.Context) error {
 	var err error
 	name, err = r.Db.Backups.ResolveName(name)
 	if err != nil {
@@ -164,9 +169,10 @@ func (r Runner) backup(name string, worldId int64, c echo.Context) error {
 	return nil
 }
 
-func (r Runner) restore(backupId, worldId int64, ifBackup bool, c echo.Context) error {
+// Restore a backup
+func (r Runner) Restore(backupId, worldId int64, ifBackup bool, c echo.Context) error {
 	if ifBackup {
-		if err := r.backup("", worldId, c); err != nil {
+		if err := r.Backup("", worldId, c); err != nil {
 			return err
 		}
 	}
@@ -234,6 +240,7 @@ func versionNameCheck(version string) error {
 	return nil
 }
 
+// writeOutput as server-sent events
 func writeOutput(output []byte, c echo.Context) error {
 	log.Println(string(output))
 	if _, err := io.Copy(c.Response(), strings.NewReader(string(output))); err != nil {
