@@ -40,7 +40,7 @@ Content-Type: application/json
 
 {
   "worldId": 1,
-  "serverId": 2
+  "serverId": 1
 }
 
 ###
