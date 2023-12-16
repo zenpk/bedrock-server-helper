@@ -1,10 +1,10 @@
 ###
 GET {{url}}/worlds/list
-Authorization: Bearer
+Authorization: Bearer {{token}}
 
 ###
 POST {{url}}/worlds/create
-Authorization: Bearer
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -15,6 +15,7 @@ Content-Type: application/json
 
 ###
 POST {{url}}/worlds/upload/1
+Authorization: Bearer {{token}}
 Content-Type: multipart/form-data
 
 {

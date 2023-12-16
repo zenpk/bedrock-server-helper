@@ -60,13 +60,16 @@ func main() {
 		AllowHeaders: []string{"*"},
 	}))
 	jwtConfig := echojwt.Config{
+		NewClaimsFunc: func(c echo.Context) jwt.Claims {
+			return new(jwtCustomClaims)
+		},
 		KeyFunc: getKey,
 	}
 	e.Use(echojwt.WithConfig(jwtConfig))
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogValuesFunc: func(c echo.Context, values middleware.RequestLoggerValues) error {
 			user := c.Get("user").(*jwt.Token) // User is injected by the JWT middleware
-			claims := user.Claims.(jwtCustomClaims)
+			claims := user.Claims.(*jwtCustomClaims)
 			log.Printf("username: %v\n", claims.Username)
 			return nil
 		},
