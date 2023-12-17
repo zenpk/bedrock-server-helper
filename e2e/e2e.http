@@ -79,7 +79,7 @@ Content-Type: application/json
 
 {
   "worldId": 1,
-  "backupId": 1
+  "backupId": 3
 }
 
 ###

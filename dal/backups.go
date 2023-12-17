@@ -110,10 +110,10 @@ func (b Backups) ResolveName(name string) (string, error) {
 			return "", err
 		}
 		if !rows.Next() {
-			if err := rows.Close(); err != nil {
-				return "", err
-			}
 			break
+		}
+		if err := rows.Close(); err != nil {
+			return "", err
 		}
 		name += "1"
 	}
