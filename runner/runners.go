@@ -40,7 +40,8 @@ func (r Runner) CreateSaveData(worldId int64, worldFile *multipart.FileHeader, c
 	baseWorldPath := basePath + "/" + r.BaseWorldFolder
 	serversPath := basePath + "/" + r.ServersFolder
 	backupsPath := basePath + "/" + r.BackupsFolder
-	if err := runAndOutput(c, "./runner/mkdirs.sh", baseWorldPath, serversPath, backupsPath); err != nil {
+	logPath := basePath + "/" + r.ServerLogPath
+	if err := runAndOutput(c, "./runner/mkdirs.sh", baseWorldPath, serversPath, backupsPath, logPath); err != nil {
 		return err
 	}
 	// copy world zip file
@@ -233,7 +234,10 @@ func (r Runner) Start(worldId int64) error {
 		return err
 	}
 	r.ServerInstances[worldId] = &ServerInstance{}
-	return r.ServerInstances[worldId].Start(r.McPath+"/"+r.ServerLogPath, r.McPath+"/"+world.Name+"/"+r.ServersFolder+"/"+server.Version)
+	basePath := r.McPath + "/" + world.Name + "/"
+	logPath := basePath + r.ServerLogPath
+	serverPath := basePath + r.ServersFolder + "/" + server.Version
+	return r.ServerInstances[worldId].Start(logPath, serverPath)
 }
 
 func (r Runner) Stop(worldId int64) error {
