@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
@@ -34,16 +35,11 @@ func (r Runner) CreateSaveData(worldId int64, worldFile *multipart.FileHeader, c
 	}
 	// TODO transaction
 	// world dir
-	var output []byte
 	basePath := r.McPath + "/" + world.Name
 	baseWorldPath := basePath + "/" + r.BaseWorldFolder
 	serversPath := basePath + "/" + r.ServersFolder
 	backupsPath := basePath + "/" + r.BackupsFolder
-	output, err = exec.Command("./runner/mkdirs.sh", baseWorldPath, serversPath, backupsPath).CombinedOutput()
-	if err != nil {
-		return err
-	}
-	if err := writeOutput(output, c); err != nil {
+	if err := runAndOutput(c, "./runner/mkdirs.sh", baseWorldPath, serversPath, backupsPath); err != nil {
 		return err
 	}
 	// copy world zip file
@@ -61,11 +57,7 @@ func (r Runner) CreateSaveData(worldId int64, worldFile *multipart.FileHeader, c
 		return err
 	}
 	unzipDestPath := baseWorldPath + "/" + world.Name + "/"
-	output, err = exec.Command("./runner/unzip_rm.sh", zipFilePath, unzipDestPath).CombinedOutput()
-	if err != nil {
-		return err
-	}
-	if err := writeOutput(output, c); err != nil {
+	if err := runAndOutput(c, "./runner/unzip_rm.sh", zipFilePath, unzipDestPath); err != nil {
 		return err
 	}
 	if err := r.Db.Worlds.SetHasSaveData(worldId, true); err != nil {
@@ -86,20 +78,11 @@ func (r Runner) GetServer(version string, worldId int64, c echo.Context) error {
 	// TODO transaction
 	serverPath := r.McPath + "/" + world.Name + "/" + r.ServersFolder + "/"
 	downloadFilePath := serverPath + version + ".zip"
-	var output []byte
-	output, err = exec.Command("./runner/get_server.sh", downloadFilePath, version).CombinedOutput()
-	if err != nil {
-		return err
-	}
-	if err := writeOutput(output, c); err != nil {
+	if err := runAndOutput(c, "./runner/get_server.sh", downloadFilePath, version); err != nil {
 		return err
 	}
 	unzipDestPath := serverPath + version + "/"
-	output, err = exec.Command("./runner/unzip_rm.sh", downloadFilePath, unzipDestPath).CombinedOutput()
-	if err != nil {
-		return err
-	}
-	if err := writeOutput(output, c); err != nil {
+	if err := runAndOutput(c, "./runner/unzip_rm.sh", downloadFilePath, unzipDestPath); err != nil {
 		return err
 	}
 	if err := r.Db.Servers.Insert(version, worldId); err != nil {
@@ -130,13 +113,8 @@ func (r Runner) UseServer(serverId, worldId int64, c echo.Context) error {
 	}
 	newServer, err := r.Db.Servers.SelectById(serverId)
 	newServerPath := basePath + "/" + r.ServersFolder + "/" + newServer.Version
-	var output []byte
 	// issue: cp -r not behaving as expected, add $5 to fix
-	output, err = exec.Command("./runner/use_server.sh", saveDataPath, newServerPath, world.Properties, world.AllowList, world.Name).CombinedOutput()
-	if err != nil {
-		return err
-	}
-	if err := writeOutput(output, c); err != nil {
+	if err := runAndOutput(c, "./runner/use_server.sh", saveDataPath, newServerPath, world.Properties, world.AllowList, world.Name); err != nil {
 		return err
 	}
 	if err := r.Db.Worlds.SetUsingServer(worldId, serverId); err != nil {
@@ -168,12 +146,7 @@ func (r Runner) Backup(name string, worldId int64, c echo.Context) error {
 	saveDataPath := basePath + "/" + r.ServersFolder + "/" + server.Version + "/worlds/" + world.Name
 	log.Println(backupPath)
 	log.Println(saveDataPath)
-	var output []byte
-	output, err = exec.Command("./runner/backup.sh", backupPath, saveDataPath).CombinedOutput()
-	if err != nil {
-		return err
-	}
-	if err := writeOutput(output, c); err != nil {
+	if err := runAndOutput(c, "./runner/backup.sh", backupPath, saveDataPath); err != nil {
 		return err
 	}
 	if err := r.Db.Backups.Insert(name, worldId); err != nil {
@@ -204,12 +177,7 @@ func (r Runner) Restore(backupId, worldId int64, ifBackup bool, c echo.Context) 
 	basePath := r.McPath + "/" + world.Name
 	backupPath := basePath + "/" + r.BackupsFolder + "/" + backup.Name + "/" + world.Name
 	saveDataPath := basePath + "/" + r.ServersFolder + "/" + server.Version + "/worlds/" + world.Name
-	var output []byte
-	output, err = exec.Command("./runner/restore.sh", backupPath, saveDataPath).CombinedOutput()
-	if err != nil {
-		return err
-	}
-	if err := writeOutput(output, c); err != nil {
+	if err := runAndOutput(c, "./runner/restore.sh", backupPath, saveDataPath); err != nil {
 		return err
 	}
 	return endOutput(c)
@@ -223,12 +191,7 @@ func (r Runner) CleanOldBackups(days int64, c echo.Context) error {
 		return err
 	}
 	for _, backup := range backups {
-		cmd := exec.Command("./runner/delete_backup.sh", r.BackupsFolder+"/"+backup.Name)
-		output, err := cmd.CombinedOutput()
-		if err != nil {
-			return err
-		}
-		if err := writeOutput(output, c); err != nil {
+		if err := runAndOutput(c, "./runner/delete_backup.sh", r.BackupsFolder+"/"+backup.Name); err != nil {
 			return err
 		}
 		if err := r.Db.Backups.DeleteById(backup.Id); err != nil {
@@ -257,12 +220,21 @@ func versionNameCheck(version string) error {
 	return nil
 }
 
-// writeOutput as server-sent events
-func writeOutput(output []byte, c echo.Context) error {
-	fmt.Println(string(output))
+// runAndOutput runs a command and outputs the result as server-sent events
+func runAndOutput(c echo.Context, command string, args ...string) error {
+	cmd := exec.Command(command, args...)
+	var stdOut, stdErr bytes.Buffer
+	cmd.Stdout = &stdOut
+	cmd.Stderr = &stdErr
+	err := cmd.Run()
+	if err != nil {
+		return errors.New(fmt.Sprintf("%s: %s", err.Error(), stdErr.String()))
+	}
+	fmt.Println(stdOut.String())
 	c.Response().Header().Set(echo.HeaderContentType, "text/event-stream")
 	c.Response().Header().Set(echo.HeaderCacheControl, "no-cache")
-	if _, err := io.Copy(c.Response(), strings.NewReader(string(output))); err != nil {
+	_, err = io.Copy(c.Response(), strings.NewReader(stdOut.String()))
+	if err != nil {
 		return err
 	}
 	c.Response().Flush()
