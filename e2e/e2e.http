@@ -92,4 +92,20 @@ Content-Type: application/json
   "backupId": 3
 }
 
+###
+POST {{url}}/worlds/start
+Authorization: Bearer {{token}}
+Content-Type: application/json
 
+{
+  "worldId": 1
+}
+
+###
+POST {{url}}/worlds/stop
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "worldId": 1
+}

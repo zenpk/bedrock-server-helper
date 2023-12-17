@@ -17,6 +17,7 @@ import (
 
 const (
 	dbPath          = "./mc.db"
+	serverLogPath   = "./server.log"
 	baseWorldFolder = "base_world"
 	serversFolder   = "servers"
 	backupsFolder   = "backups"
@@ -41,7 +42,9 @@ func main() {
 	defer db.Db.Close()
 	runners := &runner.Runner{
 		Db:              db,
+		ServerInstances: make(map[int64]*runner.ServerInstance),
 		McPath:          *mcPath,
+		ServerLogPath:   serverLogPath,
 		BaseWorldFolder: baseWorldFolder,
 		ServersFolder:   serversFolder,
 		BackupsFolder:   backupsFolder,
@@ -98,8 +101,8 @@ func main() {
 	e.POST("/backups/backup", handlers.backup)
 	e.POST("/backups/restore", handlers.restore)
 	e.DELETE("/backups/delete", handlers.deleteBackup)
-	//e.POST("/worlds/start", handlers.start)
-	//e.POST("/worlds/stop", handlers.stop)
+	e.POST("/worlds/start", handlers.start)
+	e.POST("/worlds/stop", handlers.stop)
 
 	//e.Logger.Fatal(e.StartTLS(":1323", "cert.pem", "key.pem"))
 	e.Logger.Fatal(e.Start(":1323"))

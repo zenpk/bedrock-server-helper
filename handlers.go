@@ -25,12 +25,12 @@ func (h Handlers) worldsList(c echo.Context) error {
 }
 
 func (h Handlers) createWorld(c echo.Context) error {
-	req := struct {
+	req := &struct {
 		Name       string `json:"name"`
 		Properties string `json:"properties"`
 		AllowList  string `json:"allowList"`
 	}{}
-	if err := c.Bind(&req); err != nil {
+	if err := c.Bind(req); err != nil {
 		return err
 	}
 	if strings.Contains(req.Name, " ") || strings.Contains(req.Name, "/") || strings.Contains(req.Name, "\\") || strings.Contains(req.Name, ".") || strings.Contains(req.Name, ":") || strings.Contains(req.Name, "*") || strings.Contains(req.Name, "?") || strings.Contains(req.Name, "\"") || strings.Contains(req.Name, "<") || strings.Contains(req.Name, ">") || strings.Contains(req.Name, "|") {
@@ -69,33 +69,33 @@ func (h Handlers) serversList(c echo.Context) error {
 }
 
 func (h Handlers) getServer(c echo.Context) error {
-	req := struct {
+	req := &struct {
 		WorldId int64  `json:"worldId"`
 		Version string `json:"version"`
 	}{}
-	if err := c.Bind(&req); err != nil {
+	if err := c.Bind(req); err != nil {
 		return err
 	}
 	return h.Runner.GetServer(req.Version, req.WorldId, c)
 }
 
 func (h Handlers) useServer(c echo.Context) error {
-	req := struct {
+	req := &struct {
 		ServerId int64 `json:"serverId"`
 		WorldId  int64 `json:"worldId"`
 	}{}
-	if err := c.Bind(&req); err != nil {
+	if err := c.Bind(req); err != nil {
 		return err
 	}
 	return h.Runner.UseServer(req.ServerId, req.WorldId, c)
 }
 
 func (h Handlers) deleteServer(c echo.Context) error {
-	req := struct {
+	req := &struct {
 		WorldId  int64 `json:"worldId"`
 		ServerId int64 `json:"serverId"`
 	}{}
-	if err := c.Bind(&req); err != nil {
+	if err := c.Bind(req); err != nil {
 		return err
 	}
 	return h.Runner.DeleteServer(req.WorldId, req.ServerId, c)
@@ -115,35 +115,61 @@ func (h Handlers) backupsList(c echo.Context) error {
 }
 
 func (h Handlers) backup(c echo.Context) error {
-	req := struct {
+	req := &struct {
 		Name    string `json:"name"`
 		WorldId int64  `json:"worldId"`
 	}{}
-	if err := c.Bind(&req); err != nil {
+	if err := c.Bind(req); err != nil {
 		return err
 	}
 	return h.Runner.Backup(req.Name, req.WorldId, c)
 }
 
 func (h Handlers) restore(c echo.Context) error {
-	req := struct {
+	req := &struct {
 		BackupId int64 `json:"backupId"`
 		WorldId  int64 `json:"worldId"`
 		IfBackup bool  `json:"ifBackup"`
 	}{}
-	if err := c.Bind(&req); err != nil {
+	if err := c.Bind(req); err != nil {
 		return err
 	}
 	return h.Runner.Restore(req.BackupId, req.WorldId, req.IfBackup, c)
 }
 
 func (h Handlers) deleteBackup(c echo.Context) error {
-	req := struct {
+	req := &struct {
 		WorldId  int64 `json:"worldId"`
 		BackupId int64 `json:"backupId"`
 	}{}
-	if err := c.Bind(&req); err != nil {
+	if err := c.Bind(req); err != nil {
 		return err
 	}
 	return h.Runner.DeleteBackup(req.WorldId, req.BackupId, c)
+}
+
+func (h Handlers) start(c echo.Context) error {
+	req := &struct {
+		WorldId int64 `json:"worldId"`
+	}{}
+	if err := c.Bind(req); err != nil {
+		return err
+	}
+	if err := h.Runner.Start(req.WorldId); err != nil {
+		return err
+	}
+	return c.String(http.StatusOK, "ok")
+}
+
+func (h Handlers) stop(c echo.Context) error {
+	req := &struct {
+		WorldId int64 `json:"worldId"`
+	}{}
+	if err := c.Bind(req); err != nil {
+		return err
+	}
+	if err := h.Runner.Stop(req.WorldId); err != nil {
+		return err
+	}
+	return nil
 }

@@ -17,7 +17,9 @@ import (
 
 type Runner struct {
 	Db              *dal.Db
+	ServerInstances map[int64]*ServerInstance
 	McPath          string
+	ServerLogPath   string
 	BaseWorldFolder string
 	ServersFolder   string
 	BackupsFolder   string
@@ -92,6 +94,9 @@ func (r Runner) GetServer(version string, worldId int64, c echo.Context) error {
 
 // UseServer uses a version of server for a world
 func (r Runner) UseServer(serverId, worldId int64, c echo.Context) error {
+	if r.ServerInstances[worldId] != nil && r.ServerInstances[worldId].Running {
+		return errors.New("server is running, please stop it first")
+	}
 	world, err := r.Db.Worlds.SelectById(worldId)
 	if err != nil {
 		return err
@@ -213,6 +218,29 @@ func (r Runner) DeleteServer(worldId, serverId int64, c echo.Context) error {
 		return err
 	}
 	return endOutput(c)
+}
+
+func (r Runner) Start(worldId int64) error {
+	world, err := r.Db.Worlds.SelectById(worldId)
+	if err != nil {
+		return err
+	}
+	if world.UsingServer == 0 {
+		return errors.New("no available server")
+	}
+	server, err := r.Db.Servers.SelectById(world.UsingServer)
+	if err != nil {
+		return err
+	}
+	r.ServerInstances[worldId] = &ServerInstance{}
+	return r.ServerInstances[worldId].Start(r.ServerLogPath, r.McPath+"/"+world.Name+"/"+r.ServersFolder+"/"+server.Version)
+}
+
+func (r Runner) Stop(worldId int64) error {
+	if r.ServerInstances[worldId] == nil || !r.ServerInstances[worldId].Running {
+		return errors.New("server is not running")
+	}
+	return r.ServerInstances[worldId].Stop()
 }
 
 // backupUtil is used by backup and restore
