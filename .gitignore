@@ -3,3 +3,4 @@ bedrock-server-helper
 node_modules
 *.db
 http-client.private.env.json
+.env
