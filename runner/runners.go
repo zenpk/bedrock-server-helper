@@ -2,6 +2,7 @@ package runner
 
 import (
 	"errors"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/zenpk/bedrock-server-helper/dal"
 	"io"
@@ -131,8 +132,6 @@ func (r Runner) UseServer(serverId, worldId int64, c echo.Context) error {
 	newServerPath := basePath + "/" + r.ServersFolder + "/" + newServer.Version
 	var output []byte
 	// issue: cp -r not behaving as expected, add $5 to fix
-	log.Println(saveDataPath)
-	log.Println(newServerPath + "/worlds/" + world.Name)
 	output, err = exec.Command("./runner/use_server.sh", saveDataPath, newServerPath, world.Properties, world.AllowList, world.Name).CombinedOutput()
 	if err != nil {
 		return err
@@ -260,7 +259,7 @@ func versionNameCheck(version string) error {
 
 // writeOutput as server-sent events
 func writeOutput(output []byte, c echo.Context) error {
-	log.Println(string(output))
+	fmt.Println(string(output))
 	c.Response().Header().Set(echo.HeaderContentType, "text/event-stream")
 	c.Response().Header().Set(echo.HeaderCacheControl, "no-cache")
 	if _, err := io.Copy(c.Response(), strings.NewReader(string(output))); err != nil {

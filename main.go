@@ -77,7 +77,7 @@ func main() {
 			claims := user.Claims.(*jwtCustomClaims)
 			log.Printf("| %v | %-7s | %v | %v | %v\n", v.Status, v.Method, v.URIPath, claims.Username, v.RemoteIP)
 			if v.Error != nil {
-				log.Println(v.Error)
+				fmt.Println(v.Error)
 			}
 			return nil
 		},

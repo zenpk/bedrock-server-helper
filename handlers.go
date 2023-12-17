@@ -1,9 +1,11 @@
 package main
 
 import (
+	"errors"
 	"github.com/zenpk/bedrock-server-helper/runner"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/zenpk/bedrock-server-helper/dal"
@@ -23,7 +25,6 @@ func (h Handlers) worldsList(c echo.Context) error {
 }
 
 func (h Handlers) createWorld(c echo.Context) error {
-	// TODO name check
 	req := struct {
 		Name       string `json:"name"`
 		Properties string `json:"properties"`
@@ -31,6 +32,9 @@ func (h Handlers) createWorld(c echo.Context) error {
 	}{}
 	if err := c.Bind(&req); err != nil {
 		return err
+	}
+	if strings.Contains(req.Name, " ") || strings.Contains(req.Name, "/") || strings.Contains(req.Name, "\\") || strings.Contains(req.Name, ".") || strings.Contains(req.Name, ":") || strings.Contains(req.Name, "*") || strings.Contains(req.Name, "?") || strings.Contains(req.Name, "\"") || strings.Contains(req.Name, "<") || strings.Contains(req.Name, ">") || strings.Contains(req.Name, "|") {
+		return errors.New("cannot use this world name")
 	}
 	if err := h.Db.Worlds.Insert(req.Name, req.Properties, req.AllowList); err != nil {
 		return err

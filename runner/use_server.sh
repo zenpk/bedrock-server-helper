@@ -7,6 +7,7 @@
 # $5 world name
 
 set -e
+echo "debug1"
 if [ -d "$2/worlds/$5" ]; then
   echo "removing old save data"
   rm -rf "$2/worlds/$5"
