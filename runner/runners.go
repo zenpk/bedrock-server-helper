@@ -131,6 +131,8 @@ func (r Runner) UseServer(serverId, worldId int64, c echo.Context) error {
 	newServerPath := basePath + "/" + r.ServersFolder + "/" + newServer.Version
 	var output []byte
 	// issue: cp -r not behaving as expected, add $5 to fix
+	log.Println(saveDataPath)
+	log.Println(newServerPath + "/worlds/" + world.Name)
 	output, err = exec.Command("./runner/use_server.sh", saveDataPath, newServerPath, world.Properties, world.AllowList, world.Name).CombinedOutput()
 	if err != nil {
 		return err
@@ -165,6 +167,8 @@ func (r Runner) Backup(name string, worldId int64, c echo.Context) error {
 	basePath := r.McPath + "/" + world.Name
 	backupPath := basePath + "/" + r.BackupsFolder + "/" + name + "/" + world.Name
 	saveDataPath := basePath + "/" + r.ServersFolder + "/" + server.Version + "/worlds/" + world.Name
+	log.Println(backupPath)
+	log.Println(saveDataPath)
 	var output []byte
 	output, err = exec.Command("./runner/backup.sh", backupPath, saveDataPath).CombinedOutput()
 	if err != nil {

@@ -95,7 +95,7 @@ func (b Backups) ResolveName(name string) (string, error) {
 	}
 	// dealing with name collision
 	for {
-		rows, err := b.db.Query("SELECT * FROM backups WHERE (name = ? AND deleted != 0);", name)
+		rows, err := b.db.Query("SELECT * FROM backups WHERE (name = ? AND deleted = 0);", name)
 		if err != nil {
 			return "", err
 		}
