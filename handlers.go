@@ -39,7 +39,7 @@ func (h Handlers) createWorld(c echo.Context) error {
 	if err := h.Db.Worlds.Insert(req.Name, req.Properties, req.AllowList); err != nil {
 		return err
 	}
-	return c.String(http.StatusOK, "ok")
+	return nil
 }
 
 func (h Handlers) uploadWorld(c echo.Context) error {
@@ -155,10 +155,7 @@ func (h Handlers) start(c echo.Context) error {
 	if err := c.Bind(req); err != nil {
 		return err
 	}
-	if err := h.Runner.Start(req.WorldId); err != nil {
-		return err
-	}
-	return c.String(http.StatusOK, "ok")
+	return h.Runner.Start(req.WorldId)
 }
 
 func (h Handlers) stop(c echo.Context) error {
@@ -168,8 +165,5 @@ func (h Handlers) stop(c echo.Context) error {
 	if err := c.Bind(req); err != nil {
 		return err
 	}
-	if err := h.Runner.Stop(req.WorldId); err != nil {
-		return err
-	}
-	return nil
+	return h.Runner.Stop(req.WorldId)
 }
