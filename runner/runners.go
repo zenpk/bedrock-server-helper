@@ -57,8 +57,8 @@ func (r Runner) CreateSaveData(worldId int64, worldFile *multipart.FileHeader, c
 	if _, err = io.Copy(dst, src); err != nil {
 		return err
 	}
-	unzipDestPath := baseWorldPath + "/" + world.Name + "/"
-	if err := runAndOutput(c, "./runner/unzip_rm.sh", zipFilePath, unzipDestPath); err != nil {
+	// make sure the zip file contains and only contains one layer of folder
+	if err := runAndOutput(c, "./runner/unzip_rm.sh", zipFilePath, baseWorldPath); err != nil {
 		return err
 	}
 	if err := r.Db.Worlds.SetHasSaveData(worldId, true); err != nil {
