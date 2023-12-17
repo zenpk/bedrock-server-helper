@@ -24,6 +24,10 @@ Content-Disposition: form-data; name="world"; filename="example.zip"
 < ./example.zip
 
 ###
+GET {{url}}/servers/list/1
+Authorization: Bearer {{token}}
+
+###
 POST {{url}}/servers/get
 Authorization: Bearer {{token}}
 Content-Type: application/json
@@ -44,8 +48,14 @@ Content-Type: application/json
 }
 
 ###
-GET {{url}}/servers/list/1
+DELETE {{url}}/servers/delete
 Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "worldId": 1,
+  "serverId": 1
+}
 
 ###
 GET {{url}}/backups/list/1
@@ -82,12 +92,4 @@ Content-Type: application/json
   "backupId": 3
 }
 
-###
-DELETE {{url}}/servers/delete
-Authorization: Bearer {{token}}
-Content-Type: application/json
 
-{
-  "worldId": 1,
-  "serverId": 1
-}
