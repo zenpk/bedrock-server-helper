@@ -7,10 +7,11 @@
 # $5 world name
 
 set -e
-if [ -d "$2/worlds/$5" ]; then
+if [ -d "$2/worlds" ]; then
   echo "removing old save data"
-  rm -rf "$2/worlds/$5"
+  rm -rf "$2/worlds"
 fi
+mkdir -p "$2/worlds"
 echo "moving current save data to the new server"
 cp -r "$1" "$2/worlds/$5"
 echo "writing properties"
