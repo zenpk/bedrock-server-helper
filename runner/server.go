@@ -10,7 +10,7 @@ type ServerInstance struct {
 }
 
 func (s *ServerInstance) Start(logPath, serverPath string) error {
-	cmd := exec.Command("./runner/start.sh " + serverPath + " >> " + logPath + " 2>&1")
+	cmd := exec.Command("./runner/start.sh", serverPath, logPath)
 	if err := cmd.Start(); err != nil {
 		return err
 	}
