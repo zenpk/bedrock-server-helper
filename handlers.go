@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"github.com/zenpk/bedrock-server-helper/runner"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -166,4 +168,44 @@ func (h Handlers) stop(c echo.Context) error {
 		return err
 	}
 	return h.Runner.Stop(req.WorldId)
+}
+
+func (h Handlers) getLog(c echo.Context) error {
+	const maxLine = 1000
+	worldIdStr := c.Param("worldId")
+	worldId, err := strconv.ParseInt(worldIdStr, 10, 64)
+	if err != nil {
+		return err
+	}
+	startLineStr := c.Param("startLine")
+	startLine, err := strconv.ParseInt(startLineStr, 10, 64)
+	if err != nil {
+		return err
+	}
+	world, err := h.Db.Worlds.SelectById(worldId)
+	if err != nil {
+		return err
+	}
+	logPath := h.Runner.McPath + "/" + world.Name + "/" + h.Runner.ServerLogPath
+	file, err := os.Open(logPath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	var readLines []string
+	scanner := bufio.NewScanner(file)
+	currentLine := int64(1)
+	for scanner.Scan() {
+		if currentLine >= startLine {
+			readLines = append(readLines, scanner.Text())
+		}
+		currentLine++
+	}
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+	if len(readLines) > maxLine {
+		readLines = readLines[len(readLines)-maxLine:]
+	}
+	return c.JSON(http.StatusOK, readLines)
 }

@@ -103,6 +103,7 @@ func main() {
 	e.DELETE("/backups/delete", handlers.deleteBackup)
 	e.POST("/worlds/start", handlers.start)
 	e.POST("/worlds/stop", handlers.stop)
+	e.GET("/log/:worldId/:startLine", handlers.getLog)
 
 	//e.Logger.Fatal(e.StartTLS(":1323", "cert.pem", "key.pem"))
 	e.Logger.Fatal(e.Start(":1323"))
