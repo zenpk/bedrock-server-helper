@@ -25,8 +25,10 @@ func (s *ServerInstance) Start(logPath, serverPath string) error {
 }
 
 func (s *ServerInstance) Stop() error {
-	if err := s.cmd.Process.Kill(); err != nil {
-		return err
+	// Linux specific
+	pgid, err := syscall.Getpgid(s.cmd.Process.Pid)
+	if err == nil {
+		syscall.Kill(-pgid, 15)
 	}
 	s.cmd = nil
 	s.Running = false
