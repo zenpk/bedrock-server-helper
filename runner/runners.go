@@ -7,7 +7,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/zenpk/bedrock-server-helper/dal"
 	"io"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -142,11 +141,10 @@ func (r Runner) Backup(name string, worldId int64, c echo.Context) error {
 		return err
 	}
 	basePath := r.McPath + "/" + world.Name
-	backupPath := basePath + "/" + r.BackupsFolder + "/" + name + "/" + world.Name
+	backupPath := basePath + "/" + r.BackupsFolder + "/" + name
+	backupPathWithWorldName := backupPath + "/" + world.Name
 	saveDataPath := basePath + "/" + r.ServersFolder + "/" + server.Version + "/worlds/" + world.Name
-	log.Println(backupPath)
-	log.Println(saveDataPath)
-	if err := runAndOutput(c, "./runner/backup.sh", backupPath, saveDataPath); err != nil {
+	if err := runAndOutput(c, "./runner/backup.sh", backupPath, backupPathWithWorldName, saveDataPath); err != nil {
 		return err
 	}
 	if err := r.Db.Backups.Insert(name, worldId); err != nil {
@@ -191,7 +189,7 @@ func (r Runner) CleanOldBackups(days int64, c echo.Context) error {
 		return err
 	}
 	for _, backup := range backups {
-		if err := runAndOutput(c, "./runner/rm.sh", r.BackupsFolder+"/"+backup.Name); err != nil {
+		if err := runAndOutput(c, "./runner/rm_dir.sh", r.BackupsFolder+"/"+backup.Name); err != nil {
 			return err
 		}
 		if err := r.Db.Backups.DeleteById(backup.Id); err != nil {
@@ -210,7 +208,7 @@ func (r Runner) DeleteBackup(worldId, backupId int64, c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := runAndOutput(c, "./runner/rm.sh", r.McPath+"/"+world.Name+"/"+r.BackupsFolder+"/"+backup.Name); err != nil {
+	if err := runAndOutput(c, "./runner/rm_dir.sh", r.McPath+"/"+world.Name+"/"+r.BackupsFolder+"/"+backup.Name); err != nil {
 		return err
 	}
 	if err := r.Db.Backups.DeleteById(backup.Id); err != nil {
@@ -228,7 +226,7 @@ func (r Runner) DeleteServer(worldId, serverId int64, c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := runAndOutput(c, "./runner/rm.sh", r.McPath+"/"+world.Name+"/"+r.ServersFolder+"/"+server.Version); err != nil {
+	if err := runAndOutput(c, "./runner/rm_dir.sh", r.McPath+"/"+world.Name+"/"+r.ServersFolder+"/"+server.Version); err != nil {
 		return err
 	}
 	if err := r.Db.Servers.DeleteById(server.Id); err != nil {
