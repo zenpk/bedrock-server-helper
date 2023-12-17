@@ -7,8 +7,11 @@
 # $5 world name
 
 set -e
+if [ -d "$2/worlds/$5" ]; then
+  echo "removing old save data"
+  rm -rf "$2/worlds/$5"
+fi
 echo "moving current save data to the new server"
-rm -rf "$2/worlds/$5"
 cp -r "$1" "$2/worlds/$5"
 echo "writing properties"
 echo "$3" > "$2/server.properties"
