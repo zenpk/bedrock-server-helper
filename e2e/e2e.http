@@ -109,3 +109,7 @@ Content-Type: application/json
 {
   "worldId": 1
 }
+
+###
+GET {{url}}/logs/1/1
+Authorization: Bearer {{token}}
