@@ -28,7 +28,7 @@ func (s *ServerInstance) Stop() error {
 	// Linux specific
 	pgid, err := syscall.Getpgid(s.cmd.Process.Pid)
 	if err == nil {
-		syscall.Kill(-pgid, 15)
+		syscall.Kill(-pgid, syscall.SIGTERM)
 	}
 	s.cmd = nil
 	s.Running = false
