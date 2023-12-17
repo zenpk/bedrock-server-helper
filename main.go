@@ -17,7 +17,7 @@ import (
 
 const (
 	dbPath          = "./mc.db"
-	serverLogPath   = "./server.log"
+	serverLogPath   = "server.log"
 	baseWorldFolder = "base_world"
 	serversFolder   = "servers"
 	backupsFolder   = "backups"
