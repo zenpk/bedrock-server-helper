@@ -2,6 +2,7 @@ package runner
 
 import (
 	"os/exec"
+	"syscall"
 )
 
 type ServerInstance struct {
@@ -11,6 +12,10 @@ type ServerInstance struct {
 
 func (s *ServerInstance) Start(logPath, serverPath string) error {
 	cmd := exec.Command("./runner/start.sh", serverPath, logPath)
+	// Make the command a leader of a new process group
+	// This will allow us to kill all related processes in this process group later
+	// Linux specific
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	if err := cmd.Start(); err != nil {
 		return err
 	}
