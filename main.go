@@ -35,7 +35,7 @@ type jwtCustomClaims struct {
 func main() {
 	flag.Parse()
 	db := &dal.Db{}
-	if err := db.Connect(dbPath); err != nil {
+	if err := db.ConnectAndCreate(dbPath); err != nil {
 		panic(err)
 	}
 	defer db.Db.Close()

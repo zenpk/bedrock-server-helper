@@ -27,6 +27,9 @@ func (s Servers) Create() error {
 func (s Servers) ListByWorldId(worldId int64) ([]Servers, error) {
 	servers := make([]Servers, 0)
 	rows, err := s.db.Query(`SELECT * FROM servers WHERE (deleted = 0 AND world_id = ?) ORDER BY id DESC;`, worldId)
+	if err != nil {
+		return servers, err
+	}
 	defer rows.Close()
 	for rows.Next() {
 		var server Servers
@@ -46,12 +49,27 @@ func (s Servers) Insert(version string, worldId int64) error {
 	if worldId <= 0 {
 		return errors.New("world_id must be bigger than 0")
 	}
-	_, err := s.db.Exec("INSERT INTO servers (version, world_id) VALUES (?, ?);", version, worldId)
+	// make sure there is no server with the same version and world_id
+	rows, err := s.db.Query("SELECT * FROM servers WHERE (version = ? AND world_id = ?);", version, worldId)
+	if err != nil {
+		return err
+	}
+	if rows.Next() {
+		return errors.New("the world already has this version of server")
+	}
+	if err := rows.Close(); err != nil {
+		return err
+	}
+	_, err = s.db.Exec("INSERT INTO servers (version, world_id) VALUES (?, ?);", version, worldId)
 	return err
 }
 
 func (s Servers) SelectById(id int64) (Servers, error) {
 	rows, err := s.db.Query("SELECT * FROM servers WHERE id = ?;", id)
+	if err != nil {
+		return Servers{}, err
+	}
+	defer rows.Close()
 	var server Servers
 	for rows.Next() {
 		err = rows.Scan(&server.Id, &server.Version, &server.WorldId, &server.Deleted)
@@ -67,6 +85,7 @@ func (s Servers) IsInUse(id int64) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	defer rows.Close()
 	if rows.Next() {
 		return true, nil
 	}

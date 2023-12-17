@@ -12,7 +12,7 @@ type Db struct {
 	Servers *Servers
 }
 
-func (d *Db) Connect(path string) error {
+func (d *Db) ConnectAndCreate(path string) error {
 	db, err := sql.Open("sqlite", path)
 	if err != nil {
 		return err

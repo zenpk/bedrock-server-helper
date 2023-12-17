@@ -30,6 +30,9 @@ func (b Backups) Create() error {
 func (b Backups) ListByWorldId(worldId int64) ([]Backups, error) {
 	backups := make([]Backups, 0)
 	rows, err := b.db.Query(`SELECT * FROM backups WHERE (deleted = 0 AND world_id = ?) ORDER BY id DESC`, worldId)
+	if err != nil {
+		return backups, err
+	}
 	defer rows.Close()
 	for rows.Next() {
 		var backup Backups
@@ -64,6 +67,9 @@ func (b Backups) SelectDaysBefore(days int64) ([]Backups, error) {
 	beforeTimestamp := util.UnixSeconds() - days*24*60*60
 	rows, err := b.db.Query(`SELECT * FROM backups WHERE (deleted = 0 AND timestamp < ?) ORDER BY id DESC;`,
 		beforeTimestamp)
+	if err != nil {
+		return backups, err
+	}
 	defer rows.Close()
 	for rows.Next() {
 		var backup Backups
@@ -78,6 +84,10 @@ func (b Backups) SelectDaysBefore(days int64) ([]Backups, error) {
 
 func (b Backups) SelectById(id int64) (Backups, error) {
 	rows, err := b.db.Query("SELECT * FROM backups WHERE (id = ? AND deleted = 0);", id)
+	if err != nil {
+		return Backups{}, err
+	}
+	defer rows.Close()
 	var backup Backups
 	for rows.Next() {
 		err = rows.Scan(&backup.Id, &backup.Name, &backup.Timestamp, &backup.WorldId, &backup.Deleted)
@@ -100,6 +110,9 @@ func (b Backups) ResolveName(name string) (string, error) {
 			return "", err
 		}
 		if !rows.Next() {
+			if err := rows.Close(); err != nil {
+				return "", err
+			}
 			break
 		}
 		name += "1"
