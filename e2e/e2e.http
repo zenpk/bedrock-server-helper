@@ -30,7 +30,7 @@ Content-Type: application/json
 
 {
   "worldId": 1,
-  "version": "1.20.40.01"
+  "version": "1.20.51.01"
 }
 
 ###
@@ -40,7 +40,7 @@ Content-Type: application/json
 
 {
   "worldId": 1,
-  "serverId": 1
+  "serverId": 2
 }
 
 ###
@@ -69,4 +69,24 @@ Content-Type: application/json
 {
   "worldId": 1,
   "backupId": 1
+}
+
+###
+DELETE {{url}}/backups/delete
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "worldId": 1,
+  "backupId": 1
+}
+
+###
+DELETE {{url}}/servers/delete
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "worldId": 1,
+  "serverId": 1
 }

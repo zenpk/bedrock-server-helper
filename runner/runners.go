@@ -191,12 +191,48 @@ func (r Runner) CleanOldBackups(days int64, c echo.Context) error {
 		return err
 	}
 	for _, backup := range backups {
-		if err := runAndOutput(c, "./runner/delete_backup.sh", r.BackupsFolder+"/"+backup.Name); err != nil {
+		if err := runAndOutput(c, "./runner/rm.sh", r.BackupsFolder+"/"+backup.Name); err != nil {
 			return err
 		}
 		if err := r.Db.Backups.DeleteById(backup.Id); err != nil {
 			return err
 		}
+	}
+	return endOutput(c)
+}
+
+func (r Runner) DeleteBackup(worldId, backupId int64, c echo.Context) error {
+	world, err := r.Db.Worlds.SelectById(worldId)
+	if err != nil {
+		return err
+	}
+	backup, err := r.Db.Backups.SelectById(backupId)
+	if err != nil {
+		return err
+	}
+	if err := runAndOutput(c, "./runner/rm.sh", r.McPath+"/"+world.Name+"/"+r.BackupsFolder+"/"+backup.Name); err != nil {
+		return err
+	}
+	if err := r.Db.Backups.DeleteById(backup.Id); err != nil {
+		return err
+	}
+	return endOutput(c)
+}
+
+func (r Runner) DeleteServer(worldId, serverId int64, c echo.Context) error {
+	world, err := r.Db.Worlds.SelectById(worldId)
+	if err != nil {
+		return err
+	}
+	server, err := r.Db.Servers.SelectById(serverId)
+	if err != nil {
+		return err
+	}
+	if err := runAndOutput(c, "./runner/rm.sh", r.McPath+"/"+world.Name+"/"+r.ServersFolder+"/"+server.Version); err != nil {
+		return err
+	}
+	if err := r.Db.Servers.DeleteById(server.Id); err != nil {
+		return err
 	}
 	return endOutput(c)
 }
