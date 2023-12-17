@@ -89,7 +89,7 @@ Content-Type: application/json
 
 {
   "worldId": 1,
-  "backupId": 3
+  "backupId": 1
 }
 
 ###
