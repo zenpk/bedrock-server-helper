@@ -124,30 +124,7 @@ func (r Runner) UseServer(serverId, worldId int64, c echo.Context) error {
 
 // Backup current world
 func (r Runner) Backup(name string, worldId int64, c echo.Context) error {
-	var err error
-	name, err = r.Db.Backups.ResolveName(name)
-	if err != nil {
-		return err
-	}
-	world, err := r.Db.Worlds.SelectById(worldId)
-	if err != nil {
-		return err
-	}
-	if world.UsingServer == 0 {
-		return errors.New("world is not using a server, there is no need to backup")
-	}
-	server, err := r.Db.Servers.SelectById(world.UsingServer)
-	if err != nil {
-		return err
-	}
-	basePath := r.McPath + "/" + world.Name
-	backupPath := basePath + "/" + r.BackupsFolder + "/" + name
-	backupPathWithWorldName := backupPath + "/" + world.Name
-	saveDataPath := basePath + "/" + r.ServersFolder + "/" + server.Version + "/worlds/" + world.Name
-	if err := runAndOutput(c, "./runner/backup.sh", backupPath, backupPathWithWorldName, saveDataPath); err != nil {
-		return err
-	}
-	if err := r.Db.Backups.Insert(name, worldId); err != nil {
+	if err := r.backupUtil(name, worldId, c); err != nil {
 		return err
 	}
 	return endOutput(c)
@@ -156,7 +133,7 @@ func (r Runner) Backup(name string, worldId int64, c echo.Context) error {
 // Restore a backup
 func (r Runner) Restore(backupId, worldId int64, ifBackup bool, c echo.Context) error {
 	if ifBackup {
-		if err := r.Backup("", worldId, c); err != nil {
+		if err := r.backupUtil("", worldId, c); err != nil {
 			return err
 		}
 	}
@@ -222,6 +199,9 @@ func (r Runner) DeleteServer(worldId, serverId int64, c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	if world.UsingServer == serverId {
+		return errors.New("cannot delete the server being used")
+	}
 	server, err := r.Db.Servers.SelectById(serverId)
 	if err != nil {
 		return err
@@ -233,6 +213,37 @@ func (r Runner) DeleteServer(worldId, serverId int64, c echo.Context) error {
 		return err
 	}
 	return endOutput(c)
+}
+
+// backupUtil is used by backup and restore
+func (r Runner) backupUtil(name string, worldId int64, c echo.Context) error {
+	var err error
+	name, err = r.Db.Backups.ResolveName(name)
+	if err != nil {
+		return err
+	}
+	world, err := r.Db.Worlds.SelectById(worldId)
+	if err != nil {
+		return err
+	}
+	if world.UsingServer == 0 {
+		return errors.New("world is not using a server, there is no need to backup")
+	}
+	server, err := r.Db.Servers.SelectById(world.UsingServer)
+	if err != nil {
+		return err
+	}
+	basePath := r.McPath + "/" + world.Name
+	backupPath := basePath + "/" + r.BackupsFolder + "/" + name
+	backupPathWithWorldName := backupPath + "/" + world.Name
+	saveDataPath := basePath + "/" + r.ServersFolder + "/" + server.Version + "/worlds/" + world.Name
+	if err := runAndOutput(c, "./runner/backup.sh", backupPath, backupPathWithWorldName, saveDataPath); err != nil {
+		return err
+	}
+	if err := r.Db.Backups.Insert(name, worldId); err != nil {
+		return err
+	}
+	return nil
 }
 
 // versionNameCheck checks if the version name is "x.x.x.x" format
