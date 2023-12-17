@@ -50,3 +50,23 @@ Authorization: Bearer {{token}}
 ###
 GET {{url}}/backups/list/1
 Authorization: Bearer {{token}}
+
+###
+POST {{url}}/backups/backup
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "worldId": 1,
+  "name": "hello-backup"
+}
+
+###
+POST {{url}}/backups/restore
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "worldId": 1,
+  "backupId": 1
+}

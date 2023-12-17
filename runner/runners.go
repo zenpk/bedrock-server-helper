@@ -163,7 +163,7 @@ func (r Runner) Backup(name string, worldId int64, c echo.Context) error {
 		return err
 	}
 	basePath := r.McPath + "/" + world.Name
-	backupPath := basePath + "/" + r.BackupsFolder + "/" + name
+	backupPath := basePath + "/" + r.BackupsFolder + "/" + name + "/" + world.Name
 	saveDataPath := basePath + "/" + r.ServersFolder + "/" + server.Version + "/worlds/" + world.Name
 	var output []byte
 	output, err = exec.Command("./runner/backup.sh", backupPath, saveDataPath).CombinedOutput()
@@ -200,7 +200,7 @@ func (r Runner) Restore(backupId, worldId int64, ifBackup bool, c echo.Context) 
 	}
 	basePath := r.McPath + "/" + world.Name
 	backupPath := basePath + "/" + r.BackupsFolder + "/" + backup.Name + "/" + world.Name
-	saveDataPath := basePath + "/" + r.ServersFolder + "/" + server.Version + "/worlds/"
+	saveDataPath := basePath + "/" + r.ServersFolder + "/" + server.Version + "/worlds/" + world.Name
 	var output []byte
 	output, err = exec.Command("./runner/restore.sh", backupPath, saveDataPath).CombinedOutput()
 	if err != nil {
@@ -214,6 +214,7 @@ func (r Runner) Restore(backupId, worldId int64, ifBackup bool, c echo.Context) 
 
 // CleanOldBackups deletes backups older than days
 func (r Runner) CleanOldBackups(days int64, c echo.Context) error {
+	// TODO transaction
 	backups, err := r.Db.Backups.SelectDaysBefore(days)
 	if err != nil {
 		return err
@@ -225,6 +226,9 @@ func (r Runner) CleanOldBackups(days int64, c echo.Context) error {
 			return err
 		}
 		if err := writeOutput(output, c); err != nil {
+			return err
+		}
+		if err := r.Db.Backups.DeleteById(backup.Id); err != nil {
 			return err
 		}
 	}

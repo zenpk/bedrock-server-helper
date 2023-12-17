@@ -7,5 +7,5 @@ set -e
 echo "making backup folder"
 mkdir -p "$1"
 echo "backing up"
-cp -r "$1" "$2"
+cp -r "$2" "$1"
 echo "done"
