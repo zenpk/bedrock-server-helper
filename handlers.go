@@ -77,7 +77,7 @@ func (h Handlers) getServer(c echo.Context) error {
 	if err := c.Bind(req); err != nil {
 		return err
 	}
-	return h.Runner.GetServer(req.Version, req.WorldId, c)
+	return h.Runner.GetServer(req.Version, c)
 }
 
 func (h Handlers) useServer(c echo.Context) error {

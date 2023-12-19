@@ -32,7 +32,11 @@ func (c *Cron) RefreshCron() error {
 		if cron.Name == JobBackup {
 			job, err = scheduler.NewJob(gocron.CronJob(cron.Cron, false),
 				gocron.NewTask(
-					c.Runner.Backup),
+					c.Runner.Backup,
+					"",
+					cron.WorldId,
+					nil,
+				),
 			)
 			if err != nil {
 				return err

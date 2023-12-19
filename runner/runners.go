@@ -144,7 +144,7 @@ func (r Runner) UseServer(serverId, worldId int64, c echo.Context) error {
 
 // Backup current world
 func (r Runner) Backup(name string, worldId int64, c echo.Context) error {
-	if err := r.backupUtil(name, worldId, c); err != nil {
+	if err := r.BackupUtil(name, worldId, c); err != nil {
 		return err
 	}
 	return endOutput(c)
@@ -153,7 +153,7 @@ func (r Runner) Backup(name string, worldId int64, c echo.Context) error {
 // Restore a backup
 func (r Runner) Restore(backupId, worldId int64, ifBackup bool, c echo.Context) error {
 	if ifBackup {
-		if err := r.backupUtil("", worldId, c); err != nil {
+		if err := r.BackupUtil("", worldId, c); err != nil {
 			return err
 		}
 	}
@@ -178,6 +178,7 @@ func (r Runner) Restore(backupId, worldId int64, ifBackup bool, c echo.Context) 
 }
 
 // CleanOldBackups deletes backups older than days
+// TODO
 func (r Runner) CleanOldBackups(worldId, days int64, c echo.Context) error {
 	// TODO transaction
 	backups, err := r.Db.Backups.SelectDaysBefore(days)
@@ -260,8 +261,8 @@ func (r Runner) Stop(worldId int64) error {
 	return r.ServerInstances[worldId].Stop()
 }
 
-// backupUtil is used by backup and restore
-func (r Runner) backupUtil(name string, worldId int64, c echo.Context) error {
+// BackupUtil is used by backup and restore
+func (r Runner) BackupUtil(name string, worldId int64, c echo.Context) error {
 	var err error
 	name, err = r.Db.Backups.ResolveName(name)
 	if err != nil {
@@ -320,13 +321,15 @@ func runAndOutput(c echo.Context, command string, args ...string) error {
 		return errors.New(fmt.Sprintf("%s: %s", err.Error(), stdErr.String()))
 	}
 	fmt.Println(stdOut.String())
-	c.Response().Header().Set(echo.HeaderContentType, "text/event-stream")
-	c.Response().Header().Set(echo.HeaderCacheControl, "no-cache")
-	_, err = io.Copy(c.Response(), strings.NewReader(stdOut.String()))
-	if err != nil {
-		return err
+	if c != nil {
+		c.Response().Header().Set(echo.HeaderContentType, "text/event-stream")
+		c.Response().Header().Set(echo.HeaderCacheControl, "no-cache")
+		_, err = io.Copy(c.Response(), strings.NewReader(stdOut.String()))
+		if err != nil {
+			return err
+		}
+		c.Response().Flush()
 	}
-	c.Response().Flush()
 	return nil
 }
 
