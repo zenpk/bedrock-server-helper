@@ -10,7 +10,7 @@ import (
 type Cron struct {
 	Db        *dal.Db
 	Runner    *runner.Runner
-	scheduler *gocron.Scheduler
+	scheduler gocron.Scheduler
 }
 
 func (c *Cron) RefreshCron() error {
@@ -41,6 +41,6 @@ func (c *Cron) RefreshCron() error {
 		log.Printf("job: %v, world id: %v, cron name: %v, started\n", cron.Name, cron.WorldId, job.Name())
 	}
 	scheduler.Start()
-	c.scheduler = &scheduler
+	c.scheduler = scheduler
 	return nil
 }
