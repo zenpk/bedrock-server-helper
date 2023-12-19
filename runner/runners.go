@@ -20,65 +20,31 @@ type Runner struct {
 	ServerInstances map[int64]*ServerInstance
 	McPath          string
 	ServerLogPath   string
-	BaseWorldFolder string
 	ServersFolder   string
 	BackupsFolder   string
 }
 
-// CreateSaveData receives and unzips a world file for later usage
-func (r Runner) CreateSaveData(worldId int64, worldFile *multipart.FileHeader, c echo.Context) error {
-	world, err := r.Db.Worlds.SelectById(worldId)
-	if err != nil {
+// InitDir mkdir for McPath, ServersFolder, BackupsFolder
+// Only run one time
+func (r Runner) InitDir() error {
+	serversPath := r.McPath + "/" + r.ServersFolder
+	if err := exec.Command("./runner/mkdir.sh", serversPath).Run(); err != nil {
 		return err
 	}
-	if world.HasSaveData {
-		return errors.New("the world already has a save data")
-	}
-	// TODO transaction
-	// world dir
-	basePath := r.McPath + "/" + world.Name
-	baseWorldPath := basePath + "/" + r.BaseWorldFolder
-	serversPath := basePath + "/" + r.ServersFolder
-	backupsPath := basePath + "/" + r.BackupsFolder
-	logPath := basePath + "/" + r.ServerLogPath
-	if err := runAndOutput(c, "./runner/mkdirs.sh", baseWorldPath, serversPath, backupsPath, logPath); err != nil {
+	backupsPath := r.McPath + "/" + r.BackupsFolder
+	if err := exec.Command("./runner/mkdir.sh", backupsPath).Run(); err != nil {
 		return err
 	}
-	// copy world zip file
-	src, err := worldFile.Open()
-	if err != nil {
-		return err
-	}
-	zipFilePath := basePath + r.BaseWorldFolder + worldFile.Filename
-	dst, err := os.Create(zipFilePath)
-	if err != nil {
-		return err
-	}
-	defer dst.Close()
-	if _, err = io.Copy(dst, src); err != nil {
-		return err
-	}
-	// make sure the zip file contains and only contains one layer of folder
-	if err := runAndOutput(c, "./runner/unzip_rm.sh", zipFilePath, baseWorldPath); err != nil {
-		return err
-	}
-	if err := r.Db.Worlds.SetHasSaveData(worldId, true); err != nil {
-		return err
-	}
-	return endOutput(c)
+	return nil
 }
 
 // GetServer downloads a version of server
-func (r Runner) GetServer(version string, worldId int64, c echo.Context) error {
+func (r Runner) GetServer(version string, c echo.Context) error {
 	if err := versionNameCheck(version); err != nil {
 		return err
 	}
-	world, err := r.Db.Worlds.SelectById(worldId)
-	if err != nil {
-		return err
-	}
 	// TODO transaction
-	serverPath := r.McPath + "/" + world.Name + "/" + r.ServersFolder + "/"
+	serverPath := r.McPath + "/" + r.ServersFolder + "/"
 	downloadFilePath := serverPath + version + ".zip"
 	if err := runAndOutput(c, "./runner/get_server.sh", downloadFilePath, version); err != nil {
 		return err
@@ -87,7 +53,59 @@ func (r Runner) GetServer(version string, worldId int64, c echo.Context) error {
 	if err := runAndOutput(c, "./runner/unzip_rm.sh", downloadFilePath, unzipDestPath); err != nil {
 		return err
 	}
-	if err := r.Db.Servers.Insert(version, worldId); err != nil {
+	// create worlds folder
+	if err := runAndOutput(c, "./runner/mkdir.sh", unzipDestPath+"worlds"); err != nil {
+		return err
+	}
+	if err := r.Db.Servers.Insert(version); err != nil {
+		return err
+	}
+	return endOutput(c)
+}
+
+// UploadSaveData receives and unzips a world file for later usage
+func (r Runner) UploadSaveData(worldId int64, worldFile *multipart.FileHeader, c echo.Context) error {
+	world, err := r.Db.Worlds.SelectById(worldId)
+	if err != nil {
+		return err
+	}
+	if world.HasSaveData {
+		return errors.New("the world already has a save data")
+	}
+	server, err := r.Db.Servers.SelectLatest()
+	if err != nil {
+		return err
+	}
+	// TODO transaction
+	// copy world zip file
+	src, err := worldFile.Open()
+	if err != nil {
+		return err
+	}
+	saveDataPath := r.McPath + "/" + r.ServersFolder + "/worlds/" + worldFile.Filename
+	zipFilePath := saveDataPath + ".zip"
+	unzipDestPath := saveDataPath + "/"
+	dst, err := os.Create(zipFilePath)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+	if _, err = io.Copy(dst, src); err != nil {
+		return err
+	}
+	// !IMPORTANT: make sure the zip file contains and only contains one layer of folder
+	if err := runAndOutput(c, "./runner/unzip_rm.sh", zipFilePath, unzipDestPath); err != nil {
+		return err
+	}
+	// create its backup folder
+	worldsBackupPath := r.McPath + "/" + r.BackupsFolder + "/" + world.Name
+	if err := runAndOutput(c, "./runner/mkdir.sh", worldsBackupPath); err != nil {
+		return err
+	}
+	if err := r.Db.Worlds.SetHasSaveData(worldId, true); err != nil {
+		return err
+	}
+	if err := r.Db.Worlds.SetUsingServer(worldId, server.Id); err != nil {
 		return err
 	}
 	return endOutput(c)
@@ -102,24 +120,20 @@ func (r Runner) UseServer(serverId, worldId int64, c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	if world.HasSaveData == false {
+		return errors.New("the world does not have a save data")
+	}
 	if world.UsingServer == serverId {
 		return errors.New("the world is already using the server")
 	}
-	basePath := r.McPath + "/" + world.Name
-	var saveDataPath string
-	if world.UsingServer != 0 {
-		oldServer, err := r.Db.Servers.SelectById(world.UsingServer)
-		if err != nil {
-			return err
-		}
-		saveDataPath = basePath + "/" + r.ServersFolder + "/" + oldServer.Version + "/worlds/" + world.Name
-	} else {
-		saveDataPath = basePath + "/" + r.BaseWorldFolder + "/" + world.Name
+	oldServer, err := r.Db.Servers.SelectById(world.UsingServer)
+	if err != nil {
+		return err
 	}
+	saveDataPath := r.McPath + "/" + r.ServersFolder + "/" + oldServer.Version + "/worlds/" + world.Name
 	newServer, err := r.Db.Servers.SelectById(serverId)
-	newServerPath := basePath + "/" + r.ServersFolder + "/" + newServer.Version
-	// issue: cp -r not behaving as expected, add $5 to fix
-	if err := runAndOutput(c, "./runner/use_server.sh", saveDataPath, newServerPath, world.Properties, world.AllowList, world.Name); err != nil {
+	newSaveDataPath := r.McPath + "/" + r.ServersFolder + "/" + newServer.Version + "/worlds/"
+	if err := runAndOutput(c, "./runner/mv.sh", saveDataPath, newSaveDataPath); err != nil {
 		return err
 	}
 	if err := r.Db.Worlds.SetUsingServer(worldId, serverId); err != nil {
@@ -155,9 +169,8 @@ func (r Runner) Restore(backupId, worldId int64, ifBackup bool, c echo.Context) 
 	if err != nil {
 		return err
 	}
-	basePath := r.McPath + "/" + world.Name
-	backupPath := basePath + "/" + r.BackupsFolder + "/" + backup.Name + "/" + world.Name
-	saveDataPath := basePath + "/" + r.ServersFolder + "/" + server.Version + "/worlds/" + world.Name
+	backupPath := r.McPath + "/" + r.BackupsFolder + "/" + world.Name + "/" + backup.Name + "/" + world.Name
+	saveDataPath := r.McPath + "/" + r.ServersFolder + "/" + server.Version + "/worlds/" + world.Name
 	if err := runAndOutput(c, "./runner/restore.sh", backupPath, saveDataPath); err != nil {
 		return err
 	}
@@ -165,7 +178,7 @@ func (r Runner) Restore(backupId, worldId int64, ifBackup bool, c echo.Context) 
 }
 
 // CleanOldBackups deletes backups older than days
-func (r Runner) CleanOldBackups(days int64, c echo.Context) error {
+func (r Runner) CleanOldBackups(worldId, days int64, c echo.Context) error {
 	// TODO transaction
 	backups, err := r.Db.Backups.SelectDaysBefore(days)
 	if err != nil {
@@ -265,10 +278,9 @@ func (r Runner) backupUtil(name string, worldId int64, c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	basePath := r.McPath + "/" + world.Name
-	backupPath := basePath + "/" + r.BackupsFolder + "/" + name
+	backupPath := r.McPath + "/" + r.BackupsFolder + "/" + world.Name + "/" + name
 	backupPathWithWorldName := backupPath + "/" + world.Name
-	saveDataPath := basePath + "/" + r.ServersFolder + "/" + server.Version + "/worlds/" + world.Name
+	saveDataPath := r.McPath + "/" + r.ServersFolder + "/" + server.Version + "/worlds/" + world.Name
 	if err := runAndOutput(c, "./runner/backup.sh", backupPath, backupPathWithWorldName, saveDataPath); err != nil {
 		return err
 	}

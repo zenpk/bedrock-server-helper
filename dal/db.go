@@ -10,6 +10,7 @@ type Db struct {
 	Worlds  *Worlds
 	Backups *Backups
 	Servers *Servers
+	Crons   *Crons
 }
 
 func (d *Db) ConnectAndCreate(path string) error {
@@ -21,6 +22,7 @@ func (d *Db) ConnectAndCreate(path string) error {
 	d.Worlds = &Worlds{db: db}
 	d.Backups = &Backups{db: db}
 	d.Servers = &Servers{db: db}
+	d.Crons = &Crons{db: db}
 	if err := d.Worlds.Create(); err != nil {
 		return err
 	}
@@ -28,6 +30,9 @@ func (d *Db) ConnectAndCreate(path string) error {
 		return err
 	}
 	if err := d.Servers.Create(); err != nil {
+		return err
+	}
+	if err := d.Crons.Create(); err != nil {
 		return err
 	}
 	return nil

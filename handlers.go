@@ -31,6 +31,7 @@ func (h Handlers) createWorld(c echo.Context) error {
 		Name       string `json:"name"`
 		Properties string `json:"properties"`
 		AllowList  string `json:"allowList"`
+		ServerId   int64  `json:"serverId"`
 	}{}
 	if err := c.Bind(req); err != nil {
 		return err
@@ -38,7 +39,10 @@ func (h Handlers) createWorld(c echo.Context) error {
 	if strings.Contains(req.Name, " ") || strings.Contains(req.Name, "/") || strings.Contains(req.Name, "\\") || strings.Contains(req.Name, ".") || strings.Contains(req.Name, ":") || strings.Contains(req.Name, "*") || strings.Contains(req.Name, "?") || strings.Contains(req.Name, "\"") || strings.Contains(req.Name, "<") || strings.Contains(req.Name, ">") || strings.Contains(req.Name, "|") {
 		return errors.New("cannot use this world name")
 	}
-	if err := h.Db.Worlds.Insert(req.Name, req.Properties, req.AllowList); err != nil {
+	if req.ServerId <= 0 {
+		return errors.New("invalid server id")
+	}
+	if err := h.Db.Worlds.Insert(req.Name, req.Properties, req.AllowList, req.ServerId); err != nil {
 		return err
 	}
 	return nil
@@ -54,16 +58,11 @@ func (h Handlers) uploadWorld(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return h.Runner.CreateSaveData(worldId, file, c)
+	return h.Runner.UploadSaveData(worldId, file, c)
 }
 
 func (h Handlers) serversList(c echo.Context) error {
-	worldIdStr := c.Param("worldId")
-	worldId, err := strconv.ParseInt(worldIdStr, 10, 64)
-	if err != nil {
-		return err
-	}
-	versions, err := h.Db.Servers.ListByWorldId(worldId)
+	versions, err := h.Db.Servers.List()
 	if err != nil {
 		return err
 	}

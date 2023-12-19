@@ -10,17 +10,18 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/lestrrat-go/jwx/jwk"
+	"github.com/zenpk/bedrock-server-helper/cron"
 	"github.com/zenpk/bedrock-server-helper/dal"
 	"github.com/zenpk/bedrock-server-helper/runner"
 	"log"
+	"net/http"
 )
 
 const (
-	dbPath          = "./mc.db"
-	serverLogPath   = "server.log"
-	baseWorldFolder = "base_world"
-	serversFolder   = "servers"
-	backupsFolder   = "backups"
+	dbPath        = "mc.db"
+	serverLogPath = "server.log"
+	serversFolder = "servers"
+	backupsFolder = "backups"
 )
 
 var (
@@ -36,7 +37,7 @@ type jwtCustomClaims struct {
 func main() {
 	flag.Parse()
 	db := &dal.Db{}
-	if err := db.ConnectAndCreate(dbPath); err != nil {
+	if err := db.ConnectAndCreate(*mcPath + "/" + dbPath); err != nil {
 		panic(err)
 	}
 	defer db.Db.Close()
@@ -45,18 +46,27 @@ func main() {
 		ServerInstances: make(map[int64]*runner.ServerInstance),
 		McPath:          *mcPath,
 		ServerLogPath:   serverLogPath,
-		BaseWorldFolder: baseWorldFolder,
 		ServersFolder:   serversFolder,
 		BackupsFolder:   backupsFolder,
 	}
-	scheduler, err := runners.StartCron()
-	if err != nil {
+	if err := runners.InitDir(); err != nil {
 		panic(err)
 	}
-	defer scheduler.StopJobs()
+	cronjobs := &cron.Cron{
+		Db:     db,
+		Runner: runners,
+	}
+	if err := cronjobs.RefreshCron(); err != nil {
+		panic(err)
+	}
 
 	e := echo.New()
 	e.Use(middleware.Recover())
+	e.HTTPErrorHandler = func(err error, c echo.Context) {
+		c.JSON(http.StatusInternalServerError, struct{ msg string }{
+			msg: err.Error(),
+		})
+	}
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"*"},
 		AllowMethods: []string{"*"},
@@ -90,13 +100,13 @@ func main() {
 		Db:     db,
 		Runner: runners,
 	}
-	e.GET("/worlds/list", handlers.worldsList)
-	e.POST("/worlds/create", handlers.createWorld)
-	e.POST("/worlds/upload/:worldId", handlers.uploadWorld)
-	e.GET("/servers/list/:worldId", handlers.serversList)
+	e.GET("/servers/list", handlers.serversList)
 	e.POST("/servers/get", handlers.getServer)
 	e.POST("/servers/use", handlers.useServer)
 	e.DELETE("/servers/delete", handlers.deleteServer)
+	e.GET("/worlds/list", handlers.worldsList)
+	e.POST("/worlds/create", handlers.createWorld)
+	e.POST("/worlds/upload/:worldId", handlers.uploadWorld)
 	e.GET("/backups/list/:worldId", handlers.backupsList)
 	e.POST("/backups/backup", handlers.backup)
 	e.POST("/backups/restore", handlers.restore)

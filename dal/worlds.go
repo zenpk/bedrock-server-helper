@@ -47,8 +47,8 @@ func (w Worlds) List() ([]Worlds, error) {
 	return worlds, nil
 }
 
-func (w Worlds) Insert(name, properties, allowList string) error {
-	_, err := w.db.Exec("INSERT INTO worlds (name, properties, allow_list) VALUES (?, ?, ?);", name, properties, allowList)
+func (w Worlds) Insert(name, properties, allowList string, serverId int64) error {
+	_, err := w.db.Exec("INSERT INTO worlds (name, properties, allow_list, using_server) VALUES (?, ?, ?, ?);", name, properties, allowList, serverId)
 	return err
 }
 
@@ -58,7 +58,7 @@ func (w Worlds) DeleteById(id int64) error {
 }
 
 func (w Worlds) SelectById(id int64) (Worlds, error) {
-	rows, err := w.db.Query("SELECT * FROM worlds WHERE id = ?;", id)
+	rows, err := w.db.Query("SELECT * FROM worlds WHERE (id = ? AND deleted = 0);", id)
 	if err != nil {
 		return Worlds{}, err
 	}

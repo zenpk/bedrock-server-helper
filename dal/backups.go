@@ -29,7 +29,7 @@ func (b Backups) Create() error {
 
 func (b Backups) ListByWorldId(worldId int64) ([]Backups, error) {
 	backups := make([]Backups, 0)
-	rows, err := b.db.Query(`SELECT * FROM backups WHERE (deleted = 0 AND world_id = ?) ORDER BY id DESC`, worldId)
+	rows, err := b.db.Query(`SELECT * FROM backups WHERE ( world_id = ? AND deleted = 0) ORDER BY id DESC`, worldId)
 	if err != nil {
 		return backups, err
 	}
