@@ -88,7 +88,7 @@ func (r Runner) UploadSaveData(worldId int64, worldFile *multipart.FileHeader, c
 	}
 	saveDataPath := r.McPath + "/" + r.ServersFolder + "/" + server.Version + "/worlds/" + world.Name
 	zipFilePath := saveDataPath + ".zip"
-	unzipDestPath := saveDataPath + "/"
+	unzipDestPath := saveDataPath
 	dst, err := os.Create(zipFilePath)
 	if err != nil {
 		return err
