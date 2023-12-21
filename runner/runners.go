@@ -254,7 +254,7 @@ func (r Runner) Start(worldId int64) error {
 	r.ServerInstances[worldId] = &ServerInstance{}
 	logPath := r.McPath + "/" + r.LogFolder + "/" + world.Name + ".log"
 	serverPath := r.McPath + "/" + r.ServersFolder + "/" + server.Version
-	return r.ServerInstances[worldId].Start(logPath, serverPath)
+	return r.ServerInstances[worldId].Start(logPath, serverPath, world)
 }
 
 func (r Runner) Stop(worldId int64) error {
