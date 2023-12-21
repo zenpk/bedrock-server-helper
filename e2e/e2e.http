@@ -48,7 +48,7 @@ Content-Type: application/json
 }
 
 ###
-POST {{url}}/worlds/upload/1
+POST {{url}}/worlds/upload/3
 Authorization: Bearer {{token}}
 Content-Type: multipart/form-data; boundary=boundary
 

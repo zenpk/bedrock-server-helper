@@ -86,9 +86,8 @@ func (r Runner) UploadSaveData(worldId int64, worldFile *multipart.FileHeader, c
 	if err != nil {
 		return err
 	}
-	saveDataPath := r.McPath + "/" + r.ServersFolder + "/" + server.Version + "/worlds/" + world.Name
-	zipFilePath := saveDataPath + ".zip"
-	unzipDestPath := saveDataPath
+	saveDataPath := r.McPath + "/" + r.ServersFolder + "/" + server.Version + "/worlds/"
+	zipFilePath := saveDataPath + world.Name + ".zip"
 	dst, err := os.Create(zipFilePath)
 	if err != nil {
 		return err
@@ -98,7 +97,7 @@ func (r Runner) UploadSaveData(worldId int64, worldFile *multipart.FileHeader, c
 		return err
 	}
 	// !IMPORTANT: make sure the zip file contains and only contains one layer of folder
-	if err := runAndOutput(c, "./runner/unzip_rm.sh", zipFilePath, unzipDestPath); err != nil {
+	if err := runAndOutput(c, "./runner/unzip_rm.sh", zipFilePath, saveDataPath); err != nil {
 		return err
 	}
 	// create its backup folder
