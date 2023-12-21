@@ -1,30 +1,5 @@
 ###
-GET {{url}}/worlds/list
-Authorization: Bearer {{token}}
-
-###
-POST {{url}}/worlds/create
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "name": "newworld",
-  "properties": "server-name=Dedicated Server\ngamemode=survival\nforce-gamemode=false\ndifficulty=hard\nallow-cheats=false\nmax-players=5\nonline-mode=true\nallow-list=false\nserver-port=19132\nserver-portv6=19133\nenable-lan-visibility=true\nview-distance=10\ntick-distance=4\nplayer-idle-timeout=300\nmax-threads=8\nlevel-name=newworld\nlevel-seed=\ndefault-player-permission-level=member\ntexturepack-required=false\ncontent-log-file-enabled=false\ncompression-threshold=1\ncompression-algorithm=zlib\nserver-authoritative-movement=server-auth\nplayer-movement-score-threshold=20\nplayer-movement-action-direction-threshold=0.85\nplayer-movement-distance-threshold=0.3\nplayer-movement-duration-threshold-in-ms=500\ncorrect-player-movement=false\nserver-authoritative-block-breaking=false\nchat-restriction=None\ndisable-player-interaction=false\nclient-side-chunk-generation-enabled=true\nblock-network-ids-are-hashes=true\ndisable-persona=false\ndisable-custom-skins=false\nserver-build-radius-ratio=Disabled",
-  "allowList": ""
-}
-
-###
-POST {{url}}/worlds/upload/1
-Authorization: Bearer {{token}}
-Content-Type: multipart/form-data; boundary=boundary
-
---boundary
-Content-Disposition: form-data; name="world"; filename="newworld.zip"
-
-< ./newworld.zip
-
-###
-GET {{url}}/servers/list/1
+GET {{url}}/servers/list
 Authorization: Bearer {{token}}
 
 ###
@@ -33,7 +8,6 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "worldId": 1,
   "version": "1.20.51.01"
 }
 
@@ -56,6 +30,32 @@ Content-Type: application/json
   "worldId": 1,
   "serverId": 1
 }
+
+###
+GET {{url}}/worlds/list
+Authorization: Bearer {{token}}
+
+###
+POST {{url}}/worlds/create
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "newworld",
+  "properties": "server-name=Dedicated Server\ngamemode=survival\nforce-gamemode=false\ndifficulty=hard\nallow-cheats=false\nmax-players=5\nonline-mode=true\nallow-list=false\nserver-port=19132\nserver-portv6=19133\nenable-lan-visibility=true\nview-distance=10\ntick-distance=4\nplayer-idle-timeout=300\nmax-threads=8\nlevel-name=newworld\nlevel-seed=\ndefault-player-permission-level=member\ntexturepack-required=false\ncontent-log-file-enabled=false\ncompression-threshold=1\ncompression-algorithm=zlib\nserver-authoritative-movement=server-auth\nplayer-movement-score-threshold=20\nplayer-movement-action-direction-threshold=0.85\nplayer-movement-distance-threshold=0.3\nplayer-movement-duration-threshold-in-ms=500\ncorrect-player-movement=false\nserver-authoritative-block-breaking=false\nchat-restriction=None\ndisable-player-interaction=false\nclient-side-chunk-generation-enabled=true\nblock-network-ids-are-hashes=true\ndisable-persona=false\ndisable-custom-skins=false\nserver-build-radius-ratio=Disabled",
+  "allowList": "",
+  "serverId": 1
+}
+
+###
+POST {{url}}/worlds/upload/1
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="world"; filename="newworld.zip"
+
+< ./newworld.zip
 
 ###
 GET {{url}}/backups/list/1

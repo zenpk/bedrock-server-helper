@@ -18,6 +18,35 @@ type Handlers struct {
 	Runner *runner.Runner
 }
 
+func (h Handlers) serversList(c echo.Context) error {
+	versions, err := h.Db.Servers.List()
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, versions)
+}
+
+func (h Handlers) getServer(c echo.Context) error {
+	req := &struct {
+		Version string `json:"version"`
+	}{}
+	if err := c.Bind(req); err != nil {
+		return err
+	}
+	return h.Runner.GetServer(req.Version, c)
+}
+
+func (h Handlers) useServer(c echo.Context) error {
+	req := &struct {
+		ServerId int64 `json:"serverId"`
+		WorldId  int64 `json:"worldId"`
+	}{}
+	if err := c.Bind(req); err != nil {
+		return err
+	}
+	return h.Runner.UseServer(req.ServerId, req.WorldId, c)
+}
+
 func (h Handlers) worldsList(c echo.Context) error {
 	worlds, err := h.Db.Worlds.List()
 	if err != nil {
@@ -59,36 +88,6 @@ func (h Handlers) uploadWorld(c echo.Context) error {
 		return err
 	}
 	return h.Runner.UploadSaveData(worldId, file, c)
-}
-
-func (h Handlers) serversList(c echo.Context) error {
-	versions, err := h.Db.Servers.List()
-	if err != nil {
-		return err
-	}
-	return c.JSON(http.StatusOK, versions)
-}
-
-func (h Handlers) getServer(c echo.Context) error {
-	req := &struct {
-		WorldId int64  `json:"worldId"`
-		Version string `json:"version"`
-	}{}
-	if err := c.Bind(req); err != nil {
-		return err
-	}
-	return h.Runner.GetServer(req.Version, c)
-}
-
-func (h Handlers) useServer(c echo.Context) error {
-	req := &struct {
-		ServerId int64 `json:"serverId"`
-		WorldId  int64 `json:"worldId"`
-	}{}
-	if err := c.Bind(req); err != nil {
-		return err
-	}
-	return h.Runner.UseServer(req.ServerId, req.WorldId, c)
 }
 
 func (h Handlers) deleteServer(c echo.Context) error {

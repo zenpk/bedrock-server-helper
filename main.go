@@ -63,9 +63,7 @@ func main() {
 	e := echo.New()
 	e.Use(middleware.Recover())
 	e.HTTPErrorHandler = func(err error, c echo.Context) {
-		c.JSON(http.StatusInternalServerError, struct{ msg string }{
-			msg: err.Error(),
-		})
+		c.String(http.StatusInternalServerError, err.Error())
 	}
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"*"},
