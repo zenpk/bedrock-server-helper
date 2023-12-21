@@ -62,11 +62,11 @@ func (b Backups) DeleteById(id int64) error {
 	return err
 }
 
-func (b Backups) SelectDaysBefore(days int64) ([]Backups, error) {
+func (b Backups) SelectDaysBefore(worldId, days int64) ([]Backups, error) {
 	backups := make([]Backups, 0)
 	beforeTimestamp := util.UnixSeconds() - days*24*60*60
-	rows, err := b.db.Query(`SELECT * FROM backups WHERE (deleted = 0 AND timestamp < ?) ORDER BY id DESC;`,
-		beforeTimestamp)
+	rows, err := b.db.Query(`SELECT * FROM backups WHERE (world_id = ? AND timestamp < ? AND deleted = 0) ORDER BY id DESC;`,
+		worldId, beforeTimestamp)
 	if err != nil {
 		return backups, err
 	}

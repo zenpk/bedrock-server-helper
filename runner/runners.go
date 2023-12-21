@@ -178,15 +178,19 @@ func (r Runner) Restore(backupId, worldId int64, ifBackup bool, c echo.Context) 
 }
 
 // CleanOldBackups deletes backups older than days
-// TODO
 func (r Runner) CleanOldBackups(worldId, days int64, c echo.Context) error {
 	// TODO transaction
-	backups, err := r.Db.Backups.SelectDaysBefore(days)
+	backups, err := r.Db.Backups.SelectDaysBefore(worldId, days)
+	if err != nil {
+		return err
+	}
+	world, err := r.Db.Worlds.SelectById(worldId)
 	if err != nil {
 		return err
 	}
 	for _, backup := range backups {
-		if err := runAndOutput(c, "./runner/rm_dir.sh", r.BackupsFolder+"/"+backup.Name); err != nil {
+		deletePath := r.McPath + "/" + r.BackupsFolder + "/" + world.Name + "/" + backup.Name
+		if err := runAndOutput(c, "./runner/rm_dir.sh", deletePath); err != nil {
 			return err
 		}
 		if err := r.Db.Backups.DeleteById(backup.Id); err != nil {
@@ -205,7 +209,7 @@ func (r Runner) DeleteBackup(worldId, backupId int64, c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := runAndOutput(c, "./runner/rm_dir.sh", r.McPath+"/"+world.Name+"/"+r.BackupsFolder+"/"+backup.Name); err != nil {
+	if err := runAndOutput(c, "./runner/rm_dir.sh", r.McPath+"/"+r.BackupsFolder+"/"+world.Name+"/"+backup.Name); err != nil {
 		return err
 	}
 	if err := r.Db.Backups.DeleteById(backup.Id); err != nil {
@@ -214,19 +218,16 @@ func (r Runner) DeleteBackup(worldId, backupId int64, c echo.Context) error {
 	return endOutput(c)
 }
 
-func (r Runner) DeleteServer(worldId, serverId int64, c echo.Context) error {
-	world, err := r.Db.Worlds.SelectById(worldId)
-	if err != nil {
-		return err
-	}
-	if world.UsingServer == serverId {
+func (r Runner) DeleteServer(serverId int64, c echo.Context) error {
+	beingUsed, err := r.Db.Servers.IsInUse(serverId)
+	if beingUsed {
 		return errors.New("cannot delete the server being used")
 	}
 	server, err := r.Db.Servers.SelectById(serverId)
 	if err != nil {
 		return err
 	}
-	if err := runAndOutput(c, "./runner/rm_dir.sh", r.McPath+"/"+world.Name+"/"+r.ServersFolder+"/"+server.Version); err != nil {
+	if err := runAndOutput(c, "./runner/rm_dir.sh", r.McPath+"/"+r.ServersFolder+"/"+server.Version); err != nil {
 		return err
 	}
 	if err := r.Db.Servers.DeleteById(server.Id); err != nil {
@@ -248,9 +249,8 @@ func (r Runner) Start(worldId int64) error {
 		return err
 	}
 	r.ServerInstances[worldId] = &ServerInstance{}
-	basePath := r.McPath + "/" + world.Name + "/"
-	logPath := basePath + r.ServerLogPath
-	serverPath := basePath + r.ServersFolder + "/" + server.Version
+	logPath := r.McPath + "/" + r.ServerLogPath + "/" + world.Name + ".log"
+	serverPath := r.McPath + "/" + r.ServersFolder + "/" + server.Version
 	return r.ServerInstances[worldId].Start(logPath, serverPath)
 }
 

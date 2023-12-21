@@ -19,7 +19,7 @@ import (
 
 const (
 	dbPath        = "mc.db"
-	serverLogPath = "server.log"
+	serverLogPath = "logs"
 	serversFolder = "servers"
 	backupsFolder = "backups"
 )

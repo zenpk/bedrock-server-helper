@@ -93,13 +93,12 @@ func (h Handlers) useServer(c echo.Context) error {
 
 func (h Handlers) deleteServer(c echo.Context) error {
 	req := &struct {
-		WorldId  int64 `json:"worldId"`
 		ServerId int64 `json:"serverId"`
 	}{}
 	if err := c.Bind(req); err != nil {
 		return err
 	}
-	return h.Runner.DeleteServer(req.WorldId, req.ServerId, c)
+	return h.Runner.DeleteServer(req.ServerId, c)
 }
 
 func (h Handlers) backupsList(c echo.Context) error {
