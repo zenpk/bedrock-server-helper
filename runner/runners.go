@@ -19,7 +19,7 @@ type Runner struct {
 	Db              *dal.Db
 	ServerInstances map[int64]*ServerInstance
 	McPath          string
-	ServerLogPath   string
+	LogFolder       string
 	ServersFolder   string
 	BackupsFolder   string
 }
@@ -33,6 +33,10 @@ func (r Runner) InitDir() error {
 	}
 	backupsPath := r.McPath + "/" + r.BackupsFolder
 	if err := exec.Command("./runner/mkdir.sh", backupsPath).Run(); err != nil {
+		return err
+	}
+	logsPath := r.McPath + "/" + r.LogFolder
+	if err := exec.Command("./runner/mkdir.sh", logsPath).Run(); err != nil {
 		return err
 	}
 	return nil
@@ -249,7 +253,7 @@ func (r Runner) Start(worldId int64) error {
 		return err
 	}
 	r.ServerInstances[worldId] = &ServerInstance{}
-	logPath := r.McPath + "/" + r.ServerLogPath + "/" + world.Name + ".log"
+	logPath := r.McPath + "/" + r.LogFolder + "/" + world.Name + ".log"
 	serverPath := r.McPath + "/" + r.ServersFolder + "/" + server.Version
 	return r.ServerInstances[worldId].Start(logPath, serverPath)
 }

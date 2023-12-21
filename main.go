@@ -19,7 +19,7 @@ import (
 
 const (
 	dbPath        = "mc.db"
-	serverLogPath = "logs"
+	logFolder     = "logs"
 	serversFolder = "servers"
 	backupsFolder = "backups"
 )
@@ -45,7 +45,7 @@ func main() {
 		Db:              db,
 		ServerInstances: make(map[int64]*runner.ServerInstance),
 		McPath:          *mcPath,
-		ServerLogPath:   serverLogPath,
+		LogFolder:       logFolder,
 		ServersFolder:   serversFolder,
 		BackupsFolder:   backupsFolder,
 	}

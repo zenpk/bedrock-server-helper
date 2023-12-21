@@ -184,7 +184,7 @@ func (h Handlers) getLog(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	logPath := h.Runner.McPath + "/" + world.Name + "/" + h.Runner.ServerLogPath
+	logPath := h.Runner.McPath + "/" + world.Name + "/" + h.Runner.LogFolder
 	file, err := os.Open(logPath)
 	if err != nil {
 		return err
