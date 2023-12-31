@@ -169,6 +169,15 @@ func (h Handlers) stop(c echo.Context) error {
 	return h.Runner.Stop(req.WorldId)
 }
 
+func (h Handlers) isRunning(c echo.Context) error {
+	worldIdStr := c.Param("worldId")
+	worldId, err := strconv.ParseInt(worldIdStr, 10, 64)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, h.Runner.ServerInstances[worldId] != nil)
+}
+
 func (h Handlers) getLog(c echo.Context) error {
 	const maxLine = 1000
 	worldIdStr := c.Param("worldId")

@@ -112,6 +112,7 @@ func main() {
 	e.DELETE("/backups/delete", handlers.deleteBackup)
 	e.POST("/worlds/start", handlers.start)
 	e.POST("/worlds/stop", handlers.stop)
+	e.GET("/isRunning/:worldId", handlers.isRunning)
 	e.GET("/logs/:worldId/:startLine", handlers.getLog)
 	e.GET("/crons/list/:worldId", handlers.cronList)
 	e.POST("/crons/create", handlers.createCron)

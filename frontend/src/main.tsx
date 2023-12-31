@@ -1,15 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { World } from "./page/World";
-import { Home } from "./page/Home";
-import "@mantine/core/styles.css";
 import "./global.css";
-import { createTheme, MantineProvider } from "@mantine/core";
 import { authorization, redirectLogin } from "./util/myoauth.ts";
 import { STORAGE_ACCESS_TOKEN } from "./util/constants.ts";
-
-const theme = createTheme({});
+import { Home } from "./page/Home.tsx";
 
 const router = createBrowserRouter([
   {
@@ -18,7 +13,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/:worldId",
-    element: <World />,
+    element: <></>,
   },
 ]);
 
@@ -31,9 +26,7 @@ if (urlParams.get("authorizationCode")) {
   }
   ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
-      <MantineProvider theme={theme}>
-        <RouterProvider router={router} />
-      </MantineProvider>
+      <RouterProvider router={router} />
     </React.StrictMode>,
   );
 }

@@ -111,6 +111,10 @@ Content-Type: application/json
 }
 
 ###
+GET {{url}}/isRunning/1
+Authorization: Bearer {{token}}
+
+###
 GET {{url}}/logs/1/1
 Authorization: Bearer {{token}}
 
