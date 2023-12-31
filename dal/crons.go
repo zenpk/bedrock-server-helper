@@ -7,11 +7,11 @@ import (
 
 type Crons struct {
 	db         *sql.DB
-	Id         int64
-	JobName    string // better to use id, but for simplicity
-	Cron       string
-	Parameters string // could be any format, for example, for the clean job, it should be a number
-	WorldId    int64
+	Id         int64  `json:"id"`
+	JobName    string `json:"jobName"` // better to use id, but for simplicity
+	Cron       string `json:"cron"`
+	Parameters string `json:"parameters"` // could be any format, for example, for the clean job, it should be a number
+	WorldId    int64  `json:"worldId"`
 	Deleted    bool
 }
 

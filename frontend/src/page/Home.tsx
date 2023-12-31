@@ -35,7 +35,7 @@ function ServerList() {
       header: "Version",
     },
   ];
-  const [servers, setServers] = useState([]);
+  const [servers, setServers] = useState<Server[]>([]);
   useEffect(() => {
     get("/servers/list").then((res) => {
       setServers(res);

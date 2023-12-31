@@ -13,10 +13,10 @@ import {
   TableRow,
 } from "@/components/ui/table.tsx";
 
-interface DataTableProps<TData, TValue> {
+type DataTableProps<TData, TValue> = {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-}
+};
 
 export function DataTable<TData, TValue>({
   columns,

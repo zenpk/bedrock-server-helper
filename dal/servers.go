@@ -9,9 +9,9 @@ import (
 
 type Servers struct {
 	db            *sql.DB
-	Id            int64
-	Version       string
-	VersionNumber int64 // for sorting, calculated from Version. E.g. 1.20.50.01 = 1*1000000 + 20*10000 + 50*100 + 1 = 12050001
+	Id            int64  `json:"id"`
+	Version       string `json:"version"`
+	VersionNumber int64  // for sorting, calculated from Version. E.g. 1.20.50.01 = 1*1000000 + 20*10000 + 50*100 + 1 = 12050001
 	Deleted       bool
 }
 

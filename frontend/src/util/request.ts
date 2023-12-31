@@ -103,12 +103,9 @@ export async function postEvent(
 }
 
 function handleError(e: any) {
-  switch (e.response?.status) {
-    case 401:
-      break;
-    default:
-      console.log(e);
-      break;
+  console.log(e);
+  if (e.response?.status === 401 || e.response?.data?.startsWith("code=401")) {
+    handleUnauthorized();
   }
   return null;
 }

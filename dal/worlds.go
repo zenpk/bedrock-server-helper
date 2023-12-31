@@ -6,12 +6,12 @@ import (
 
 type Worlds struct {
 	db          *sql.DB
-	Id          int64
-	Name        string
-	Properties  string
-	AllowList   string
+	Id          int64  `json:"id"`
+	Name        string `json:"name"`
+	Properties  string `json:"properties"`
+	AllowList   string `json:"allowList"`
 	HasSaveData bool
-	UsingServer int64
+	UsingServer int64 `json:"usingServer"`
 	Deleted     bool
 }
 

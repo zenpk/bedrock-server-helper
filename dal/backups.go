@@ -8,10 +8,10 @@ import (
 
 type Backups struct {
 	db        *sql.DB
-	Id        int64
-	Name      string
-	Timestamp int64
-	WorldId   int64
+	Id        int64  `json:"id"`
+	Name      string `json:"name"`
+	Timestamp int64  `json:"timestamp"`
+	WorldId   int64  `json:"worldId"`
 	Deleted   bool
 }
 
