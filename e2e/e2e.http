@@ -113,3 +113,28 @@ Content-Type: application/json
 ###
 GET {{url}}/logs/1/1
 Authorization: Bearer {{token}}
+
+###
+GET {{url}}/crons/list/1
+Authorization: Bearer {{token}}
+
+###
+POST {{url}}/crons/create
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "worldId": 1,
+  "jobName": "backup",
+  "cron": "55 06 * * *",
+  "parameters": "7"
+}
+
+###
+DELETE {{url}}/crons/delete
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "id": 1
+}
