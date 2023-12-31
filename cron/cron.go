@@ -30,9 +30,27 @@ func (c *Cron) RefreshCron() error {
 		return err
 	}
 	for _, cron := range crons {
-		var job gocron.Job
-		if cron.Name == JobBackup {
-			job, err = scheduler.NewJob(gocron.CronJob(cron.Cron, false),
+		if cron.JobName == JobBackup {
+			days, err := strconv.ParseInt(cron.Parameters, 10, 64)
+			if err != nil {
+				return err
+			}
+			if days <= 0 {
+				return errors.New("cannot clean future backups")
+			}
+			cleanJob, err := scheduler.NewJob(gocron.CronJob(cron.Cron, false),
+				gocron.NewTask(
+					c.Runner.CleanOldBackups,
+					cron.WorldId,
+					days,
+					nil,
+				),
+			)
+			if err != nil {
+				return nil
+			}
+			logJob(cron, cleanJob)
+			backupJob, err := scheduler.NewJob(gocron.CronJob(cron.Cron, false),
 				gocron.NewTask(
 					c.Runner.Backup,
 					"",
@@ -43,29 +61,14 @@ func (c *Cron) RefreshCron() error {
 			if err != nil {
 				return err
 			}
+			logJob(cron, backupJob)
 		}
-		if cron.Name == JobClean {
-			days, err := strconv.ParseInt(cron.Parameters, 10, 64)
-			if err != nil {
-				return err
-			}
-			if days <= 0 {
-				return errors.New("cannot clean future backups")
-			}
-			job, err = scheduler.NewJob(gocron.CronJob(cron.Cron, false),
-				gocron.NewTask(
-					c.Runner.CleanOldBackups,
-					cron.WorldId,
-					days,
-				),
-			)
-			if err != nil {
-				return nil
-			}
-		}
-		log.Printf("job: %v, world id: %v, cron name: %v, started\n", cron.Name, cron.WorldId, job.Name())
 	}
 	scheduler.Start()
 	c.scheduler = scheduler
 	return nil
+}
+
+func logJob(cron dal.Crons, job gocron.Job) {
+	log.Printf("job: %v, world id: %v, cron name: %v, started\n", cron.JobName, cron.WorldId, job.Name())
 }

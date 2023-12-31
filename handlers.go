@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"errors"
+	"github.com/zenpk/bedrock-server-helper/cron"
 	"github.com/zenpk/bedrock-server-helper/runner"
 	"net/http"
 	"os"
@@ -16,6 +17,7 @@ import (
 type Handlers struct {
 	Db     *dal.Db
 	Runner *runner.Runner
+	Cron   *cron.Cron
 }
 
 func (h Handlers) serversList(c echo.Context) error {
@@ -205,4 +207,46 @@ func (h Handlers) getLog(c echo.Context) error {
 		readLines = readLines[len(readLines)-maxLine:]
 	}
 	return c.JSON(http.StatusOK, readLines)
+}
+
+func (h Handlers) cronList(c echo.Context) error {
+	worldIdStr := c.Param("worldId")
+	worldId, err := strconv.ParseInt(worldIdStr, 10, 64)
+	if err != nil {
+		return err
+	}
+	crons, err := h.Db.Crons.SelectByWorldId(worldId)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, crons)
+}
+
+func (h Handlers) createCron(c echo.Context) error {
+	req := &struct {
+		JobName    string `json:"jobName"`
+		WorldId    int64  `json:"worldId"`
+		Parameters string `json:"parameters"`
+		Cron       string `json:"cron"`
+	}{}
+	if err := c.Bind(req); err != nil {
+		return err
+	}
+	if err := h.Db.Crons.Insert(req.JobName, req.WorldId, req.Parameters, req.Cron); err != nil {
+		return err
+	}
+	return h.Cron.RefreshCron()
+}
+
+func (h Handlers) deleteCron(c echo.Context) error {
+	req := &struct {
+		Id int64 `json:"id"`
+	}{}
+	if err := c.Bind(req); err != nil {
+		return err
+	}
+	if err := h.Db.Crons.DeleteById(req.Id); err != nil {
+		return err
+	}
+	return h.Cron.RefreshCron()
 }

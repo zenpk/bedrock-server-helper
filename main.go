@@ -97,6 +97,7 @@ func main() {
 	handlers := &Handlers{
 		Db:     db,
 		Runner: runners,
+		Cron:   cronjobs,
 	}
 	e.GET("/servers/list", handlers.serversList)
 	e.POST("/servers/get", handlers.getServer)
@@ -112,6 +113,9 @@ func main() {
 	e.POST("/worlds/start", handlers.start)
 	e.POST("/worlds/stop", handlers.stop)
 	e.GET("/logs/:worldId/:startLine", handlers.getLog)
+	e.GET("/crons/list/:worldId", handlers.cronList)
+	e.POST("/crons/create", handlers.createCron)
+	e.DELETE("/crons/delete", handlers.deleteCron)
 
 	//e.Logger.Fatal(e.StartTLS(":1323", "cert.pem", "key.pem"))
 	e.Logger.Fatal(e.Start(":1323"))
