@@ -80,11 +80,13 @@ func (s Servers) SelectById(id int64) (Servers, error) {
 	}
 	defer rows.Close()
 	var server Servers
-	for rows.Next() {
+	if rows.Next() {
 		err = rows.Scan(&server.Id, &server.Version, &server.VersionNumber, &server.Deleted)
 		if err != nil {
 			return server, err
 		}
+	} else {
+		return server, errors.New("server not found")
 	}
 	return server, nil
 }
@@ -121,11 +123,13 @@ func (s Servers) SelectLatest() (Servers, error) {
 	}
 	defer rows.Close()
 	var server Servers
-	for rows.Next() {
+	if rows.Next() {
 		err = rows.Scan(&server.Id, &server.Version, &server.VersionNumber, &server.Deleted)
 		if err != nil {
 			return server, err
 		}
+	} else {
+		return server, errors.New("no available server")
 	}
 	return server, nil
 }

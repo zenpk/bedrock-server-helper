@@ -4,14 +4,14 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Table } from "lucide-react";
 import {
+  Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table.tsx";
+} from "@/components/ui/table";
 
 type DataTableProps<TData, TValue> = {
   columns: ColumnDef<TData, TValue>[];

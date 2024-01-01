@@ -2,6 +2,7 @@ package dal
 
 import (
 	"database/sql"
+	"errors"
 )
 
 type Worlds struct {
@@ -64,10 +65,12 @@ func (w Worlds) SelectById(id int64) (Worlds, error) {
 	}
 	defer rows.Close()
 	var world Worlds
-	for rows.Next() {
+	if rows.Next() {
 		if err := rows.Scan(&world.Id, &world.Name, &world.Properties, &world.AllowList, &world.HasSaveData, &world.UsingServer, &world.Deleted); err != nil {
 			return Worlds{}, err
 		}
+	} else {
+		return Worlds{}, errors.New("world not found")
 	}
 	return world, err
 }

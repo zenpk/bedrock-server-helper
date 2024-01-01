@@ -89,11 +89,13 @@ func (b Backups) SelectById(id int64) (Backups, error) {
 	}
 	defer rows.Close()
 	var backup Backups
-	for rows.Next() {
+	if rows.Next() {
 		err = rows.Scan(&backup.Id, &backup.Name, &backup.Timestamp, &backup.WorldId, &backup.Deleted)
 		if err != nil {
 			return backup, err
 		}
+	} else {
+		return backup, errors.New("no backup found")
 	}
 	return backup, nil
 }
