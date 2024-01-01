@@ -5,6 +5,8 @@ import "./global.css";
 import { authorization, redirectLogin } from "./util/myoauth.ts";
 import { STORAGE_ACCESS_TOKEN } from "./util/constants.ts";
 import { Home } from "./page/Home.tsx";
+import { WorldPage } from "./page/World.tsx";
+import { WorldsContextProvider } from "@/util/WorldsContext.tsx";
 
 const router = createBrowserRouter([
   {
@@ -12,8 +14,8 @@ const router = createBrowserRouter([
     element: <Home />,
   },
   {
-    path: "/:worldId",
-    element: <></>,
+    path: "/worlds/:worldId",
+    element: <WorldPage />,
   },
 ]);
 
@@ -26,7 +28,9 @@ if (urlParams.get("authorizationCode")) {
   }
   ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
-      <RouterProvider router={router} />
+      <WorldsContextProvider>
+        <RouterProvider router={router} />
+      </WorldsContextProvider>
     </React.StrictMode>,
   );
 }

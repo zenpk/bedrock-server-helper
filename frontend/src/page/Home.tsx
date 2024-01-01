@@ -9,12 +9,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ColumnDef } from "@tanstack/react-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import React, { SetStateAction, useEffect, useState } from "react";
+import React, { SetStateAction, useContext, useEffect, useState } from "react";
 import { Card } from "@/components/Card.tsx";
 import { del, get } from "@/util/request.ts";
 import { Server, World } from "@/util/types.ts";
 import { DataTable } from "@/components/DataTable.tsx";
 import { Link } from "react-router-dom";
+import { WorldsContext } from "@/util/WorldsContext.tsx";
 
 export function Home() {
   const [alertText, setAlertText] = useState("");
@@ -86,6 +87,7 @@ function WorldList({
   ];
   const [worlds, setWorlds] = useState<World[]>([]);
   const [refresh, setRefresh] = useState(1);
+  const [, setWorldsContext] = useContext(WorldsContext)!;
 
   function deleteWorld(id: number) {
     del(`/worlds/delete`, { id: id }).then((res) => {
@@ -98,6 +100,7 @@ function WorldList({
     setAlertText("");
     get("/worlds/list").then((res) => {
       setWorlds(res);
+      setWorldsContext(res);
     });
   }, [refresh]);
   return <DataTable columns={columns} data={worlds}></DataTable>;
