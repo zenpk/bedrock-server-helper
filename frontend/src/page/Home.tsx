@@ -14,21 +14,27 @@ import { Card } from "@/components/Card.tsx";
 import { del, get } from "@/util/request.ts";
 import { Server, World } from "@/util/types.ts";
 import { DataTable } from "@/components/DataTable.tsx";
+import { Link } from "react-router-dom";
 
 export function Home() {
-  // const [worlds, setWorlds] = useState([]);
   const [alertText, setAlertText] = useState("");
   return (
     <Card alertText={alertText}>
-      <Tabs defaultValue="worlds" className="w-[400px]">
-        <TabsList className={"flex justify-items-center"}>
-          <TabsTrigger value="worlds">Worlds</TabsTrigger>
-          <TabsTrigger value="servers">Servers</TabsTrigger>
+      <Tabs defaultValue="worlds" className={"w-11/12"}>
+        <TabsList className={"flex justify-around"}>
+          <TabsTrigger value="worlds" className={"w-1/2"}>
+            Worlds
+          </TabsTrigger>
+          <TabsTrigger value="servers" className={"w-1/2"}>
+            Servers
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="servers">
           <ServerList setAlertText={setAlertText} />
         </TabsContent>
-        <TabsContent value="worlds">Change your password here.</TabsContent>
+        <TabsContent value="worlds">
+          <WorldList setAlertText={setAlertText} />
+        </TabsContent>
       </Tabs>
     </Card>
   );
@@ -61,9 +67,13 @@ function WorldList({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <Link to={`/worlds/${row.original.id}`}>
+                <DropdownMenuItem>View</DropdownMenuItem>
+              </Link>
               <DropdownMenuItem
+                className={"red"}
                 onClick={() => {
-                  deleteServer(row.original.id);
+                  deleteWorld(row.original.id);
                 }}
               >
                 Delete
@@ -77,8 +87,8 @@ function WorldList({
   const [worlds, setWorlds] = useState<World[]>([]);
   const [refresh, setRefresh] = useState(1);
 
-  function deleteServer(id: number) {
-    del(`/worlds/delete`, { serverId: id }).then((res) => {
+  function deleteWorld(id: number) {
+    del(`/worlds/delete`, { id: id }).then((res) => {
       setAlertText(res);
       setRefresh((prev) => prev + 1);
     });
@@ -121,6 +131,7 @@ function ServerList({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem
+                className={"red"}
                 onClick={() => {
                   deleteServer(row.original.id);
                 }}
