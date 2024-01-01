@@ -154,17 +154,17 @@ func (r Runner) Backup(name string, worldId int64, c echo.Context) error {
 }
 
 // Restore a backup
-func (r Runner) Restore(backupId, worldId int64, ifBackup bool, c echo.Context) error {
-	if ifBackup {
-		if err := r.BackupUtil("", worldId, c); err != nil {
-			return err
-		}
-	}
-	backup, err := r.Db.Backups.SelectById(backupId)
+func (r Runner) Restore(id int64, ifBackup bool, c echo.Context) error {
+	backup, err := r.Db.Backups.SelectById(id)
 	if err != nil {
 		return err
 	}
-	world, err := r.Db.Worlds.SelectById(worldId)
+	if ifBackup {
+		if err := r.BackupUtil("", backup.WorldId, c); err != nil {
+			return err
+		}
+	}
+	world, err := r.Db.Worlds.SelectById(backup.WorldId)
 	if err != nil {
 		return err
 	}
@@ -203,12 +203,12 @@ func (r Runner) CleanOldBackups(worldId, days int64, c echo.Context) error {
 	return endOutput(c)
 }
 
-func (r Runner) DeleteBackup(worldId, backupId int64, c echo.Context) error {
-	world, err := r.Db.Worlds.SelectById(worldId)
+func (r Runner) DeleteBackup(id int64, c echo.Context) error {
+	backup, err := r.Db.Backups.SelectById(id)
 	if err != nil {
 		return err
 	}
-	backup, err := r.Db.Backups.SelectById(backupId)
+	world, err := r.Db.Worlds.SelectById(backup.WorldId)
 	if err != nil {
 		return err
 	}
@@ -221,12 +221,33 @@ func (r Runner) DeleteBackup(worldId, backupId int64, c echo.Context) error {
 	return endOutput(c)
 }
 
-func (r Runner) DeleteServer(serverId int64, c echo.Context) error {
-	beingUsed, err := r.Db.Servers.IsInUse(serverId)
+func (r Runner) DeleteWorld(id int64, c echo.Context) error {
+	world, err := r.Db.Worlds.SelectById(id)
+	if err != nil {
+		return err
+	}
+	if r.ServerInstances[id] != nil && r.ServerInstances[id].Running {
+		return errors.New("the world is running, please stop it first")
+	}
+	server, err := r.Db.Servers.SelectById(world.UsingServer)
+	if err != nil {
+		return err
+	}
+	if err := runAndOutput(c, "./runner/rm_dir.sh", r.McPath+"/"+r.ServersFolder+"/"+server.Version+"/"+world.Name); err != nil {
+		return err
+	}
+	if err := r.Db.Worlds.DeleteById(world.Id); err != nil {
+		return err
+	}
+	return endOutput(c)
+}
+
+func (r Runner) DeleteServer(id int64, c echo.Context) error {
+	beingUsed, err := r.Db.Servers.IsInUse(id)
 	if beingUsed {
 		return errors.New("cannot delete the server being used")
 	}
-	server, err := r.Db.Servers.SelectById(serverId)
+	server, err := r.Db.Servers.SelectById(id)
 	if err != nil {
 		return err
 	}

@@ -21,7 +21,7 @@ export async function get(url: string) {
     });
     return resp.data;
   } catch (e: any) {
-    handleError(e);
+    return handleError(e);
   }
 }
 
@@ -40,7 +40,7 @@ export async function post(url: string, body: any) {
     });
     return resp.data;
   } catch (e: any) {
-    handleError(e);
+    return handleError(e);
   }
 }
 
@@ -60,7 +60,7 @@ export async function del(url: string, body: any) {
     });
     return resp.data;
   } catch (e: any) {
-    handleError(e);
+    return handleError(e);
   }
 }
 
@@ -107,7 +107,7 @@ function handleError(e: any) {
   if (e.response?.status === 401 || e.response?.data?.startsWith("code=401")) {
     handleUnauthorized();
   }
-  return null;
+  return e.response.data ?? "error";
 }
 
 function handleUnauthorized() {

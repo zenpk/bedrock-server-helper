@@ -27,8 +27,7 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "worldId": 1,
-  "serverId": 1
+  "id": 1
 }
 
 ###
@@ -56,6 +55,15 @@ Content-Type: multipart/form-data; boundary=boundary
 Content-Disposition: form-data; name="world"; filename="newworld.zip"
 
 < ./newworld.zip
+
+###
+DELETE {{url}}/worlds/delete
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "id": 1
+}
 
 ###
 GET {{url}}/backups/list/1
@@ -88,8 +96,7 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "worldId": 1,
-  "backupId": 2
+  "id": 1
 }
 
 ###

@@ -92,14 +92,24 @@ func (h Handlers) uploadWorld(c echo.Context) error {
 	return h.Runner.UploadSaveData(worldId, file, c)
 }
 
-func (h Handlers) deleteServer(c echo.Context) error {
+func (h Handlers) deleteWorld(c echo.Context) error {
 	req := &struct {
-		ServerId int64 `json:"serverId"`
+		Id int64 `json:"id"`
 	}{}
 	if err := c.Bind(req); err != nil {
 		return err
 	}
-	return h.Runner.DeleteServer(req.ServerId, c)
+	return h.Runner.DeleteWorld(req.Id, c)
+}
+
+func (h Handlers) deleteServer(c echo.Context) error {
+	req := &struct {
+		Id int64 `json:"id"`
+	}{}
+	if err := c.Bind(req); err != nil {
+		return err
+	}
+	return h.Runner.DeleteServer(req.Id, c)
 }
 
 func (h Handlers) backupsList(c echo.Context) error {
@@ -128,25 +138,23 @@ func (h Handlers) backup(c echo.Context) error {
 
 func (h Handlers) restore(c echo.Context) error {
 	req := &struct {
-		BackupId int64 `json:"backupId"`
-		WorldId  int64 `json:"worldId"`
+		Id       int64 `json:"id"`
 		IfBackup bool  `json:"ifBackup"`
 	}{}
 	if err := c.Bind(req); err != nil {
 		return err
 	}
-	return h.Runner.Restore(req.BackupId, req.WorldId, req.IfBackup, c)
+	return h.Runner.Restore(req.Id, req.IfBackup, c)
 }
 
 func (h Handlers) deleteBackup(c echo.Context) error {
 	req := &struct {
-		WorldId  int64 `json:"worldId"`
-		BackupId int64 `json:"backupId"`
+		Id int64 `json:"id"`
 	}{}
 	if err := c.Bind(req); err != nil {
 		return err
 	}
-	return h.Runner.DeleteBackup(req.WorldId, req.BackupId, c)
+	return h.Runner.DeleteBackup(req.Id, c)
 }
 
 func (h Handlers) start(c echo.Context) error {
@@ -175,7 +183,7 @@ func (h Handlers) isRunning(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, h.Runner.ServerInstances[worldId] != nil)
+	return c.JSON(http.StatusOK, h.Runner.ServerInstances[worldId] != nil && h.Runner.ServerInstances[worldId].Running)
 }
 
 func (h Handlers) getLog(c echo.Context) error {

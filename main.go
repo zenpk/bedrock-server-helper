@@ -106,6 +106,7 @@ func main() {
 	e.GET("/worlds/list", handlers.worldsList)
 	e.POST("/worlds/create", handlers.createWorld)
 	e.POST("/worlds/upload/:worldId", handlers.uploadWorld)
+	e.DELETE("/worlds/delete", handlers.deleteWorld)
 	e.GET("/backups/list/:worldId", handlers.backupsList)
 	e.POST("/backups/backup", handlers.backup)
 	e.POST("/backups/restore", handlers.restore)
